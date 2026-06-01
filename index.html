@@ -569,15 +569,24 @@ header{
 
   /* layout type "app" : header figé en haut, nav figée en bas,
      seul le contenu défile entre les deux → la barre du bas ne bouge plus */
-  html,body{height:100%;overflow:hidden;}
-  body{display:flex;flex-direction:column;}
+  html{height:100%;}
+  body{
+    height:100vh;             /* repli pour vieux navigateurs */
+    height:100dvh;            /* hauteur réelle visible, s'adapte aux barres du navigateur */
+    min-height:100dvh;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    padding-bottom:0;          /* l'espace bas est géré par .main et .mob-nav */
+  }
   header{flex:0 0 auto;}
   .app-shell{flex:1 1 auto;min-height:0;overflow:hidden;}
   .main{
-    height:100%;
+    flex:1 1 auto;
+    min-height:0;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    padding:16px 16px 90px;
+    /* espace bas = barre de nav (~62px) + zone système (encoche) + marge de confort */
+    padding:16px 16px calc(82px + env(safe-area-inset-bottom));
   }
   .today-banner{padding:14px 16px;}
   .header-search{display:none;}
@@ -750,7 +759,8 @@ header{
     <!-- ═══ SECTION: CALENDRIER ═══ -->
     <div class="section hidden" id="s-calendar">
       <div class="cal-header">
-        <div class="toolbar-title">Calendrier <span style="font-size:12px;font-weight:400;color:var(--text3);">— touchez un jour pour ajouter un rdv</span></div>
+        <div class="toolbar-title">Calendrier <span style="font-size:12px;font-weight:400;color:var(--text3);">— touchez un jour</span></div>
+        <button class="btn btn-secondary btn-sm" id="btn-cal-view" onclick="toggleCalView()">Vue semaine</button>
         <button class="btn btn-secondary btn-sm" onclick="calOffset--;renderCalendar()">◀</button>
         <span id="cal-month-label" style="font-size:13px;font-weight:600;min-width:100px;text-align:center;"></span>
         <button class="btn btn-secondary btn-sm" onclick="calOffset++;renderCalendar()">▶</button>
