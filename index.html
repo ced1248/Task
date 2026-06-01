@@ -44,6 +44,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 
+html,body{max-width:100%;overflow-x:hidden;}
+
 body{
   font-family:'Syne',sans-serif;
   background:var(--bg);
@@ -195,7 +197,7 @@ header{
 .nav-item .badge.blue{background:var(--blue);}
 
 /* Main content */
-.main{flex:1;min-width:0;padding:28px 28px 60px;}
+.main{flex:1;min-width:0;max-width:100%;overflow-x:hidden;padding:28px 28px 60px;}
 
 /* ── SECTIONS ────────────────────────────────────────── */
 .section{display:none;}
@@ -426,7 +428,7 @@ header{
 
 /* ── CALENDAR ──────────────────────────────────────────── */
 .cal-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
 .cal-day-label{font-size:10px;font-weight:700;letter-spacing:.5px;text-align:center;color:var(--text3);padding-bottom:6px;}
 .cal-cell{
   min-height:68px;background:var(--card);border:1px solid var(--border);
@@ -564,7 +566,19 @@ header{
   }
   .mob-nav-item .icon{font-size:19px;}
   .mob-nav-item.active{color:#cfe0b8;}
-  .main{padding:16px 16px 90px;}
+
+  /* layout type "app" : header figé en haut, nav figée en bas,
+     seul le contenu défile entre les deux → la barre du bas ne bouge plus */
+  html,body{height:100%;overflow:hidden;}
+  body{display:flex;flex-direction:column;}
+  header{flex:0 0 auto;}
+  .app-shell{flex:1 1 auto;min-height:0;overflow:hidden;}
+  .main{
+    height:100%;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:16px 16px 90px;
+  }
   .today-banner{padding:14px 16px;}
   .header-search{display:none;}
 }
@@ -982,6 +996,7 @@ header{
       <button class="modal-close" onclick="closeModal('modal-day')">✕</button>
     </div>
     <input type="hidden" id="day-date">
+    <button class="btn btn-secondary" id="btn-workday" style="width:100%;margin-bottom:14px;" onclick="toggleWorkday()">👩‍💼 Sandra travaille ce jour</button>
     <div id="day-events-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
     <div class="form-grid" style="grid-template-columns:90px 1fr;margin-bottom:10px;">
       <div class="form-group"><label class="form-label">Heure</label><input type="time" id="day-ev-time"></div>
@@ -1032,6 +1047,7 @@ function defaultData() {
     ],
     courses:[],
     events:[],
+    workdays:[],
     recurDone:{}
   };
 }
@@ -1066,6 +1082,7 @@ function loadData() {
       const parsed = JSON.parse(d);
       if(!Array.isArray(parsed.courses)) parsed.courses = [];
       if(!Array.isArray(parsed.events)) parsed.events = [];
+      if(!Array.isArray(parsed.workdays)) parsed.workdays = [];
       return parsed;
     }
   } catch(e){}
@@ -1113,6 +1130,7 @@ async function pullRemote(showToast=false){
         data = remote;
         if(!Array.isArray(data.courses)) data.courses = [];
         if(!Array.isArray(data.events)) data.events = [];
+        if(!Array.isArray(data.workdays)) data.workdays = [];
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -1902,9 +1920,15 @@ function calCell(yr,mo,d,displayD,todayS,other){
   const tasks=data.tasks.filter(t=>t.deadline===ds&&!t.done);
   const events=(data.events||[]).filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const isToday=ds===todayS;
+  const worksDay=(data.workdays||[]).includes(ds);
 
-  // rendez-vous (sauge) en premier, puis échéances de tâches
-  let evHTML=events.slice(0,2).map(e=>{
+  let evHTML='';
+  // pastille "Sandra bosse" en premier
+  if(worksDay){
+    evHTML+=`<div class="cal-event" style="background:#e6dcf0;color:#5a4080;font-weight:600;">👩‍💼 Sandra</div>`;
+  }
+  // rendez-vous (sauge), puis échéances de tâches
+  evHTML+=events.slice(0,2).map(e=>{
     const t=e.time?e.time+' ':'';
     return `<div class="cal-event" style="background:var(--accent-l);color:#4a5536;font-weight:600;">${esc(t)}${esc(e.text)}</div>`;
   }).join('');
@@ -1932,8 +1956,28 @@ function openDay(ds){
     d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('day-ev-text').value='';
   document.getElementById('day-ev-time').value='';
+  updateWorkdayBtn();
   renderDayEvents();
   openModal('modal-day');
+}
+
+function updateWorkdayBtn(){
+  const ds=document.getElementById('day-date').value;
+  const btn=document.getElementById('btn-workday');
+  if(!btn) return;
+  const on=(data.workdays||[]).includes(ds);
+  btn.textContent = on ? '✓ Sandra travaille (toucher pour retirer)' : '👩‍💼 Sandra travaille ce jour';
+  btn.style.background = on ? 'var(--green-l)' : '';
+  btn.style.color = on ? '#3a5530' : '';
+  btn.style.borderColor = on ? 'var(--green)' : '';
+}
+
+function toggleWorkday(){
+  const ds=document.getElementById('day-date').value;
+  if(!Array.isArray(data.workdays)) data.workdays=[];
+  if(data.workdays.includes(ds)) data.workdays=data.workdays.filter(x=>x!==ds);
+  else data.workdays.push(ds);
+  saveData(); updateWorkdayBtn(); renderCalendar();
 }
 
 function renderDayEvents(){
