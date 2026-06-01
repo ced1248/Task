@@ -444,6 +444,11 @@ header{
   margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
+/* Vue semaine : cellules plus hautes, événements lisibles, texte qui peut passer à la ligne */
+.cal-grid.week-view .cal-cell{min-height:130px;}
+.cal-grid.week-view .cal-event{white-space:normal;font-size:11px;padding:2px 6px;}
+.cal-grid.week-view .cal-day-label{font-size:11px;}
+
 /* ── SETTINGS ───────────────────────────────────────────── */
 .settings-block{margin-bottom:28px;}
 .settings-block h3{
@@ -1893,8 +1898,24 @@ function clearCheckedCourses(){
 // ══════════════════════════════════════════════════════
 const DAYS_FR=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 const MONTHS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+let calView='month';  // 'month' ou 'week'
+
+function toggleCalView(){
+  calView = (calView==='month') ? 'week' : 'month';
+  calOffset = 0;  // on repart sur la période courante au changement de vue
+  const btn=document.getElementById('btn-cal-view');
+  if(btn) btn.textContent = (calView==='month') ? 'Vue semaine' : 'Vue mois';
+  const grid=document.getElementById('cal-grid');
+  if(grid) grid.classList.toggle('week-view', calView==='week');
+  renderCalendar();
+}
 
 function renderCalendar(){
+  if(calView==='week') return renderCalendarWeek();
+  return renderCalendarMonth();
+}
+
+function renderCalendarMonth(){
   const now=new Date();
   const ref=new Date(now.getFullYear(),now.getMonth()+calOffset,1);
   const yr=ref.getFullYear(), mo=ref.getMonth();
@@ -1906,9 +1927,9 @@ function renderCalendar(){
   const todayS=todayStr();
 
   const grid=document.getElementById('cal-grid');
+  grid.classList.remove('week-view');
   let html=DAYS_FR.slice(1).concat(DAYS_FR[0]).map(d=>`<div class="cal-day-label">${d}</div>`).join('');
 
-  // prev month filler
   for(let i=firstDow-1;i>=0;i--){
     const d=prevDays-i;
     html+=calCell(mo-1<0?yr-1:yr,mo-1<0?11:mo-1,d,d,todayS,true);
@@ -1916,11 +1937,41 @@ function renderCalendar(){
   for(let d=1;d<=daysInMonth;d++){
     html+=calCell(yr,mo,d,d,todayS,false);
   }
-  // next month
   const total=firstDow+daysInMonth;
   const remaining=(7-total%7)%7;
   for(let d=1;d<=remaining;d++){
     html+=calCell(yr,mo+1>11?yr+1:yr,mo+1>11?0:mo+1,d,todayS,true);
+  }
+  grid.innerHTML=html;
+}
+
+function renderCalendarWeek(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  // lundi de la semaine courante + décalage
+  const monday=new Date(now);
+  const dowMon=(now.getDay()+6)%7;          // 0=lundi
+  monday.setDate(now.getDate()-dowMon+calOffset*7);
+  const todayS=todayStr();
+
+  const sunday=new Date(monday); sunday.setDate(monday.getDate()+6);
+  // libellé de la plage (ex: 2 – 8 juin)
+  const lbl = monday.getMonth()===sunday.getMonth()
+    ? `${monday.getDate()} – ${sunday.getDate()} ${MONTHS_FR[monday.getMonth()].toLowerCase()}`
+    : `${monday.getDate()} ${MONTHS_FR[monday.getMonth()].slice(0,4).toLowerCase()} – ${sunday.getDate()} ${MONTHS_FR[sunday.getMonth()].slice(0,4).toLowerCase()}`;
+  document.getElementById('cal-month-label').textContent=lbl;
+
+  const grid=document.getElementById('cal-grid');
+  grid.classList.add('week-view');
+  let html='';
+  for(let i=0;i<7;i++){
+    const cur=new Date(monday); cur.setDate(monday.getDate()+i);
+    html+=`<div class="cal-day-label">${DAYS_FR[(cur.getDay())]}</div>`;
+    // on remplace la cellule par une version "semaine" plus grande juste après les labels
+  }
+  // cellules (rangée en dessous des 7 labels)
+  for(let i=0;i<7;i++){
+    const cur=new Date(monday); cur.setDate(monday.getDate()+i);
+    html+=calCell(cur.getFullYear(),cur.getMonth(),cur.getDate(),cur.getDate(),todayS,false);
   }
   grid.innerHTML=html;
 }
@@ -1931,6 +1982,7 @@ function calCell(yr,mo,d,displayD,todayS,other){
   const events=(data.events||[]).filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const isToday=ds===todayS;
   const worksDay=(data.workdays||[]).includes(ds);
+  const lim = (calView==='week') ? 6 : 2;  // vue semaine : plus d'espace, on en montre plus
 
   let evHTML='';
   // pastille "Sandra bosse" en premier
@@ -1938,16 +1990,16 @@ function calCell(yr,mo,d,displayD,todayS,other){
     evHTML+=`<div class="cal-event" style="background:#e6dcf0;color:#5a4080;font-weight:600;">👩‍💼 Sandra</div>`;
   }
   // rendez-vous (sauge), puis échéances de tâches
-  evHTML+=events.slice(0,2).map(e=>{
+  evHTML+=events.slice(0,lim).map(e=>{
     const t=e.time?e.time+' ':'';
     return `<div class="cal-event" style="background:var(--accent-l);color:#4a5536;font-weight:600;">${esc(t)}${esc(e.text)}</div>`;
   }).join('');
-  evHTML+=tasks.slice(0,2).map(t=>{
+  evHTML+=tasks.slice(0,lim).map(t=>{
     const c=t.prio==='haute'?'#f0e0d8':t.prio==='basse'?'#dde8ec':'#e0e7d2';
     const tc=t.prio==='haute'?'#8a4030':t.prio==='basse'?'#3a5560':'#4a5536';
     return `<div class="cal-event" style="background:${c};color:${tc};">${esc(t.title)}</div>`;
   }).join('');
-  const extra=(events.length>2?events.length-2:0)+(tasks.length>2?tasks.length-2:0);
+  const extra=(events.length>lim?events.length-lim:0)+(tasks.length>lim?tasks.length-lim:0);
   if(extra>0) evHTML+=`<div style="font-size:9px;color:var(--text3);">+${extra}</div>`;
 
   return `<div class="cal-cell${isToday?' today':''}${other?' other-month':''}" onclick="openDay('${ds}')">
