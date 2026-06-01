@@ -118,20 +118,19 @@ body{
 header{
   background:#5c6a4c;
   color:#f6f8f0;
-  padding:0 28px;
-  height:66px;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:20px;
+  padding:10px 28px;
+  display:flex;flex-direction:column;gap:8px;
   position:sticky;top:0;z-index:200;
   box-shadow:0 2px 12px rgba(90,100,75,.12);
 }
+.header-row1{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.header-row2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .logo{
   font-family:'Instrument Serif',serif;
   font-size:1.5rem;letter-spacing:.3px;
   display:flex;align-items:center;gap:10px;
 }
 .logo span{color:#cfe0b8;font-style:italic;}
-.header-actions{display:flex;gap:10px;align-items:center;}
 .header-search{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,.1);
@@ -144,7 +143,7 @@ header{
 .header-search input{
   background:none;border:none;outline:none;
   color:var(--bg);font-family:'Syne',sans-serif;font-size:13px;
-  width:160px;
+  width:140px;
 }
 .header-search input::placeholder{color:rgba(255,255,255,.4);}
 .btn-h{
@@ -160,7 +159,7 @@ header{
 .btn-h.primary:hover{background:#76855d;}
 
 /* ── LAYOUT ──────────────────────────────────────────── */
-.app-shell{display:flex;min-height:calc(100vh - 66px);}
+.app-shell{display:flex;min-height:calc(100vh - var(--header-h,92px));}
 
 /* Sidebar nav */
 .sidebar{
@@ -168,8 +167,8 @@ header{
   background:var(--card);
   border-right:1px solid var(--border);
   padding:20px 0;
-  position:sticky;top:66px;
-  height:calc(100vh - 66px);
+  position:sticky;top:var(--header-h,92px);
+  height:calc(100vh - var(--header-h,92px));
   overflow-y:auto;
 }
 .nav-group{margin-bottom:24px;}
@@ -661,16 +660,19 @@ header{
 
 <!-- HEADER -->
 <header>
-  <div class="logo">🏠 <span>Maison</span></div>
-  <div class="header-actions">
+  <div class="header-row1">
+    <div class="logo">🏠 <span>Maison</span></div>
+    <span id="sync-status" style="font-size:11px;font-weight:600;white-space:nowrap;"></span>
+  </div>
+  <div class="header-row2">
     <div class="header-search">
       <span>🔍</span>
       <input type="text" id="global-search" placeholder="Rechercher…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape')this.value='',onSearch('')">
     </div>
-    <button class="btn-h" onclick="openModal('modal-recur')">+ Récurrence</button>
+    <button class="btn-h" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
+    <button class="btn-h" onclick="openModal('modal-recur')">🔁 Récurrence</button>
     <button class="btn-h primary" onclick="openNewTask()" data-tip="N">+ Tâche</button>
     <button class="btn-h" id="btn-settings" onclick="showSection('settings', document.getElementById('nav-settings'))" data-tip="Réglages" aria-label="Réglages">⚙️</button>
-    <span id="sync-status" style="font-size:11px;font-weight:600;white-space:nowrap;"></span>
   </div>
 </header>
 
@@ -2266,6 +2268,16 @@ function startSync(){
 //  INIT
 // ══════════════════════════════════════════════════════
 render();
+
+// ajuste la hauteur du header (2 lignes) pour la sidebar desktop
+(function setHeaderH(){
+  const h=document.querySelector('header');
+  if(h){
+    const apply=()=>document.documentElement.style.setProperty('--header-h', h.offsetHeight+'px');
+    apply();
+    window.addEventListener('resize', apply);
+  }
+})();
 
 // Étiquette d'info synchro dans Réglages
 (function(){
