@@ -670,7 +670,6 @@ header{
       <input type="text" id="global-search" placeholder="Rechercher…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape')this.value='',onSearch('')">
     </div>
     <button class="btn-h" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
-    <button class="btn-h" onclick="openModal('modal-recur')">🔁 Récurrence</button>
     <button class="btn-h primary" onclick="openNewTask()" data-tip="N">+ Tâche</button>
     <button class="btn-h" id="btn-settings" onclick="showSection('settings', document.getElementById('nav-settings'))" data-tip="Réglages" aria-label="Réglages">⚙️</button>
   </div>
@@ -761,6 +760,7 @@ header{
     <div class="section hidden" id="s-recur">
       <div class="toolbar">
         <div class="toolbar-title">Récurrences <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:400;color:var(--text2);" id="recur-today-label"></span></div>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('modal-recur')">+ Nouvelle récurrence</button>
       </div>
       <div class="recur-grid" id="recur-list"></div>
     </div>
