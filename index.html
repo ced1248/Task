@@ -58,6 +58,42 @@ body{
 @keyframes appfade{from{opacity:0;}to{opacity:1;}}
 @media(prefers-reduced-motion:reduce){body{animation:none;}}
 
+/* ── LOGIN ─────────────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;z-index:5000;
+  background:linear-gradient(160deg,#6a7a58,#5c6a4c);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  padding-top:calc(24px + env(safe-area-inset-top));
+}
+#login-screen.hidden{display:none;}
+.login-card{
+  background:var(--card);border-radius:var(--r);
+  padding:30px 26px;width:100%;max-width:360px;
+  box-shadow:var(--shadow2);text-align:center;
+}
+.login-logo{
+  font-family:'Instrument Serif',serif;font-size:2rem;
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;
+}
+.login-logo span{color:var(--accent);font-style:italic;}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.4;}
+.login-inp{
+  width:100%;padding:13px 15px;margin-bottom:11px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);
+  font-family:'Syne',sans-serif;font-size:14px;color:var(--text);outline:none;
+  transition:border-color .18s;
+}
+.login-inp:focus{border-color:var(--accent);}
+.login-error{font-size:12px;color:var(--red);min-height:16px;margin-bottom:8px;}
+.login-btn{
+  width:100%;padding:13px;border:none;border-radius:var(--r2);
+  background:var(--accent);color:white;font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;transition:background .18s;
+}
+.login-btn:hover{background:#76855d;}
+.login-btn:disabled{opacity:.6;cursor:default;}
+
 /* ── TOAST ─────────────────────────────────────────── */
 #toast-container{
   position:fixed;bottom:24px;right:24px;
@@ -80,19 +116,20 @@ body{
 header{
   background:#5c6a4c;
   color:#f6f8f0;
-  padding:0 24px;
-  height:60px;
+  padding:0 28px;
+  height:66px;
   display:flex;align-items:center;justify-content:space-between;
+  gap:20px;
   position:sticky;top:0;z-index:200;
   box-shadow:0 2px 12px rgba(90,100,75,.12);
 }
 .logo{
   font-family:'Instrument Serif',serif;
-  font-size:1.4rem;letter-spacing:.3px;
-  display:flex;align-items:center;gap:8px;
+  font-size:1.5rem;letter-spacing:.3px;
+  display:flex;align-items:center;gap:10px;
 }
 .logo span{color:#cfe0b8;font-style:italic;}
-.header-actions{display:flex;gap:8px;align-items:center;}
+.header-actions{display:flex;gap:10px;align-items:center;}
 .header-search{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,.1);
@@ -121,7 +158,7 @@ header{
 .btn-h.primary:hover{background:#76855d;}
 
 /* ── LAYOUT ──────────────────────────────────────────── */
-.app-shell{display:flex;min-height:calc(100vh - 60px);}
+.app-shell{display:flex;min-height:calc(100vh - 66px);}
 
 /* Sidebar nav */
 .sidebar{
@@ -129,8 +166,8 @@ header{
   background:var(--card);
   border-right:1px solid var(--border);
   padding:20px 0;
-  position:sticky;top:60px;
-  height:calc(100vh - 60px);
+  position:sticky;top:66px;
+  height:calc(100vh - 66px);
   overflow-y:auto;
 }
 .nav-group{margin-bottom:24px;}
@@ -168,18 +205,18 @@ header{
 .today-banner{
   background:linear-gradient(135deg,#7a8a64,#6a7a58);
   color:#f6f8f0;border-radius:var(--r);
-  padding:22px 28px;margin-bottom:26px;
+  padding:14px 24px;margin-bottom:18px;
   display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:16px;
+  flex-wrap:wrap;gap:14px;
   box-shadow:var(--shadow);
 }
-.today-left .date-line{font-size:12px;color:#dde4cf;margin-bottom:3px;}
-.today-left .greet{font-family:'Instrument Serif',serif;font-size:1.5rem;}
-.today-stats{display:flex;gap:24px;}
+.today-left .date-line{font-size:11px;color:#dde4cf;margin-bottom:2px;}
+.today-left .greet{font-family:'Instrument Serif',serif;font-size:1.3rem;}
+.today-stats{display:flex;gap:22px;}
 .t-stat{text-align:center;}
-.t-stat .num{font-size:26px;font-weight:700;color:#fdfcf6;}
+.t-stat .num{font-size:22px;font-weight:700;color:#fdfcf6;}
 .t-stat .num.green{color:#eaf2dd;}
-.t-stat .lbl{font-size:10px;color:#cfd8c0;letter-spacing:.5px;font-weight:600;}
+.t-stat .lbl{font-size:9px;color:#cfd8c0;letter-spacing:.5px;font-weight:600;}
 
 /* ── TOOLBAR ─────────────────────────────────────────── */
 .toolbar{
@@ -278,6 +315,52 @@ header{
   font-size:13px;color:var(--text3);transition:all .15s;
 }
 .btn-icon:hover{background:var(--bg2);color:var(--text);}
+
+/* ── AUJOURD'HUI ──────────────────────────────────────── */
+.today-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:16px 18px;margin-bottom:14px;
+  box-shadow:0 1px 4px rgba(90,100,75,.04);max-width:640px;
+}
+.today-head{
+  font-weight:700;font-size:13px;color:var(--text2);
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.today-count{
+  background:var(--accent);color:white;font-size:10px;font-weight:700;
+  padding:1px 7px;border-radius:10px;
+}
+.today-row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--bg2);
+}
+.today-row:last-child{border-bottom:none;}
+.today-time{font-weight:700;color:var(--accent);min-width:46px;font-size:13px;}
+.today-txt{flex:1;font-size:13px;font-weight:500;}
+.today-empty{font-size:12px;color:var(--text3);padding:4px 0;}
+
+/* ── COURSES ──────────────────────────────────────────── */
+.course-add{display:flex;gap:8px;margin-bottom:18px;}
+.courses-list{display:flex;flex-direction:column;gap:8px;max-width:560px;}
+.course-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:14px 16px;
+  display:flex;align-items:center;gap:13px;
+  box-shadow:0 1px 4px rgba(90,100,75,.04);
+  transition:box-shadow .2s,opacity .2s;
+}
+.course-item:hover{box-shadow:var(--shadow);}
+.course-item.checked{opacity:.5;}
+.course-item.checked .course-name{text-decoration:line-through;color:var(--text3);}
+.course-name{flex:1;font-weight:500;font-size:14px;}
+.course-check{
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid var(--border2);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:white;transition:all .2s;background:transparent;
+}
+.course-check:hover{border-color:var(--done);transform:scale(1.08);}
+.course-check.on{background:var(--done);border-color:var(--done);}
 
 /* ── RECURRENCES ──────────────────────────────────────── */
 .recur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
@@ -523,12 +606,24 @@ header{
 </head>
 <body>
 
+<!-- ÉCRAN DE CONNEXION -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🏠 <span>Maison</span></div>
+    <div class="login-sub">Connecte-toi pour accéder à la liste familiale</div>
+    <input type="email" id="login-email" class="login-inp" placeholder="Email" autocomplete="username">
+    <input type="password" id="login-pass" class="login-inp" placeholder="Mot de passe" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="login-error" class="login-error"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Se connecter</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div id="toast-container"></div>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">🌿 <span>Maison</span></div>
+  <div class="logo">🏠 <span>Maison</span></div>
   <div class="header-actions">
     <div class="header-search">
       <span>🔍</span>
@@ -536,7 +631,6 @@ header{
     </div>
     <button class="btn-h" onclick="openModal('modal-recur')">+ Récurrence</button>
     <button class="btn-h primary" onclick="openNewTask()" data-tip="N">+ Tâche</button>
-    <button class="btn-h" id="btn-refresh" onclick="pullRemote(true)" data-tip="Rafraîchir depuis le cloud">🔄</button>
     <span id="sync-status" style="font-size:11px;font-weight:600;white-space:nowrap;"></span>
   </div>
 </header>
@@ -546,7 +640,10 @@ header{
   <nav class="sidebar">
     <div class="nav-group">
       <div class="nav-label">Vue</div>
-      <div class="nav-item active" id="nav-tasks" onclick="showSection('tasks',this)">
+      <div class="nav-item active" id="nav-today" onclick="showSection('today',this)">
+        <span>☀️</span> Aujourd'hui
+      </div>
+      <div class="nav-item" id="nav-tasks" onclick="showSection('tasks',this)">
         <span>📋</span> Tâches <span class="badge" id="nb-tasks">0</span>
       </div>
       <div class="nav-item" id="nav-recur" onclick="showSection('recur',this)">
@@ -554,6 +651,9 @@ header{
       </div>
       <div class="nav-item" id="nav-projects" onclick="showSection('projects',this)">
         <span>📁</span> Projets <span class="badge blue" id="nb-projects">0</span>
+      </div>
+      <div class="nav-item" id="nav-courses" onclick="showSection('courses',this)">
+        <span>🛒</span> Courses <span class="badge green" id="nb-courses">0</span>
       </div>
       <div class="nav-item" id="nav-calendar" onclick="showSection('calendar',this)">
         <span>📅</span> Calendrier
@@ -586,8 +686,14 @@ header{
       </div>
     </div>
 
+    <!-- ═══ SECTION: AUJOURD'HUI ═══ -->
+    <div class="section active" id="s-today">
+      <div class="toolbar-title" style="margin-bottom:16px;">Ma journée</div>
+      <div id="today-content"></div>
+    </div>
+
     <!-- ═══ SECTION: TÂCHES ═══ -->
-    <div class="section active" id="s-tasks">
+    <div class="section hidden" id="s-tasks">
       <div class="toolbar">
         <div class="toolbar-title">Tâches</div>
         <select class="sort-select" id="sort-select" onchange="renderTasks()">
@@ -630,13 +736,26 @@ header{
     <!-- ═══ SECTION: CALENDRIER ═══ -->
     <div class="section hidden" id="s-calendar">
       <div class="cal-header">
-        <div class="toolbar-title">Calendrier</div>
+        <div class="toolbar-title">Calendrier <span style="font-size:12px;font-weight:400;color:var(--text3);">— touchez un jour pour ajouter un rdv</span></div>
         <button class="btn btn-secondary btn-sm" onclick="calOffset--;renderCalendar()">◀</button>
         <span id="cal-month-label" style="font-size:13px;font-weight:600;min-width:100px;text-align:center;"></span>
         <button class="btn btn-secondary btn-sm" onclick="calOffset++;renderCalendar()">▶</button>
         <button class="btn btn-secondary btn-sm" onclick="calOffset=0;renderCalendar()">Aujourd'hui</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- ═══ SECTION: COURSES ═══ -->
+    <div class="section hidden" id="s-courses">
+      <div class="toolbar">
+        <div class="toolbar-title">Liste de courses <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:400;color:var(--text2);" id="courses-count-label"></span></div>
+        <button class="btn btn-secondary btn-sm" id="btn-clear-checked" onclick="clearCheckedCourses()">Effacer les cochés</button>
+      </div>
+      <div class="course-add">
+        <input class="inp" type="text" id="new-course-item" placeholder="Ajouter un article…" onkeydown="if(event.key==='Enter')addCourse()">
+        <button class="btn btn-primary" onclick="addCourse()">Ajouter</button>
+      </div>
+      <div class="courses-list" id="courses-list"></div>
     </div>
 
     <!-- ═══ SECTION: STATS ═══ -->
@@ -668,6 +787,11 @@ header{
             <option>🌿</option><option>🏠</option><option>🐔</option><option>🌱</option>
             <option>🔨</option><option>🍳</option><option>🛒</option><option>💊</option>
             <option>🚗</option><option>📚</option><option>🐕</option><option>🌳</option>
+            <option>🧹</option><option>🧺</option><option>🧽</option><option>🪣</option>
+            <option>🐈</option><option>🐎</option><option>🐰</option><option>🐠</option>
+            <option>💡</option><option>🔧</option><option>🪚</option><option>🪛</option>
+            <option>📄</option><option>💰</option><option>🎒</option><option>⚽</option>
+            <option>🌸</option><option>🍅</option><option>🥚</option><option>🪴</option>
           </select>
           <button class="btn btn-primary" onclick="addTheme()">Ajouter</button>
         </div>
@@ -680,9 +804,10 @@ header{
           <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📥 Importer JSON</button>
           <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
           <button class="btn btn-danger" onclick="confirmAction('Tout effacer et réinitialiser ?',resetData)">🗑 Réinitialiser</button>
+          <button class="btn btn-secondary" onclick="doLogout()">🔒 Se déconnecter</button>
         </div>
         <p style="margin-top:10px;font-size:11px;color:var(--text3);">Les données sont stockées localement (localStorage). Exportez régulièrement pour sauvegarder.</p>
-        <p style="margin-top:6px;font-size:11px;color:var(--text3);">☁️ Synchro cloud : <span id="sync-info-label"></span> Utilisez 🔄 dans le bandeau pour récupérer les modifications de l'autre téléphone.</p>
+        <p style="margin-top:6px;font-size:11px;color:var(--text3);">☁️ Synchro cloud : <span id="sync-info-label"></span> Rechargez la page (ou rouvrez l'app) pour récupérer les modifications de l'autre téléphone.</p>
       </div>
 
       <div class="settings-block">
@@ -700,11 +825,11 @@ header{
 
 <!-- MOBILE NAV -->
 <nav class="mob-nav">
-  <button class="mob-nav-item active" id="mnav-tasks" onclick="showSection('tasks',this,true)"><span class="icon">📋</span>Tâches</button>
-  <button class="mob-nav-item" id="mnav-recur" onclick="showSection('recur',this,true)"><span class="icon">🔁</span>Récurrences</button>
-  <button class="mob-nav-item" id="mnav-projects" onclick="showSection('projects',this,true)"><span class="icon">📁</span>Projets</button>
-  <button class="mob-nav-item" id="mnav-calendar" onclick="showSection('calendar',this,true)"><span class="icon">📅</span>Calendrier</button>
-  <button class="mob-nav-item" id="mnav-stats" onclick="showSection('stats',this,true)"><span class="icon">📊</span>Stats</button>
+  <button class="mob-nav-item active" id="mnav-today" onclick="showSection('today',this,true)"><span class="icon">☀️</span>Jour</button>
+  <button class="mob-nav-item" id="mnav-tasks" onclick="showSection('tasks',this,true)"><span class="icon">📋</span>Tâches</button>
+  <button class="mob-nav-item" id="mnav-recur" onclick="showSection('recur',this,true)"><span class="icon">🔁</span>Récurr.</button>
+  <button class="mob-nav-item" id="mnav-courses" onclick="showSection('courses',this,true)"><span class="icon">🛒</span>Courses</button>
+  <button class="mob-nav-item" id="mnav-calendar" onclick="showSection('calendar',this,true)"><span class="icon">📅</span>Agenda</button>
 </nav>
 
 <!-- ════ MODAL: TASK ════ -->
@@ -849,6 +974,26 @@ header{
   </div>
 </div>
 
+<!-- ════ MODAL: DAY EVENTS ════ -->
+<div class="overlay" id="modal-day">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-day-title">Rendez-vous</span>
+      <button class="modal-close" onclick="closeModal('modal-day')">✕</button>
+    </div>
+    <input type="hidden" id="day-date">
+    <div id="day-events-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+    <div class="form-grid" style="grid-template-columns:90px 1fr;margin-bottom:10px;">
+      <div class="form-group"><label class="form-label">Heure</label><input type="time" id="day-ev-time"></div>
+      <div class="form-group"><label class="form-label">Rendez-vous</label><input type="text" id="day-ev-text" placeholder="Ex : Dentiste" onkeydown="if(event.key==='Enter')addEvent()"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-day')">Fermer</button>
+      <button class="btn btn-primary" onclick="addEvent()">+ Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════
 //  CONSTANTS & COLORS
@@ -862,15 +1007,18 @@ function defaultData() {
   return {
     persons:[
       {id:'p1',name:'Cédric',color:'#b8622a'},
-      {id:'p2',name:'Partenaire',color:'#5e8c52'},
-      {id:'p3',name:'Enfant 1',color:'#3d6fa0'},
-      {id:'p4',name:'Enfant 2',color:'#9e4a5a'}
+      {id:'p2',name:'Sandra',color:'#5e8c52'},
+      {id:'p3',name:'Jules',color:'#3d6fa0'},
+      {id:'p4',name:'Margaux',color:'#9e4a5a'}
     ],
     themes:[
       {id:'t1',name:'Jardin',icon:'🌱'},
       {id:'t2',name:'Poulailler',icon:'🐔'},
       {id:'t3',name:'Maison',icon:'🏠'},
-      {id:'t4',name:'Courses',icon:'🛒'}
+      {id:'t4',name:'Courses',icon:'🛒'},
+      {id:'t5',name:'Bricolage',icon:'🔨'},
+      {id:'t6',name:'Animaux',icon:'🐕'},
+      {id:'t7',name:'Ménage',icon:'🧹'}
     ],
     tasks:[],
     recurs:[
@@ -882,6 +1030,8 @@ function defaultData() {
       {id:'pr1',name:'Terrasse brasero',icon:'🏗',color:'#b8622a'},
       {id:'pr2',name:'Jardin syntropic',icon:'🌿',color:'#5e8c52'}
     ],
+    courses:[],
+    events:[],
     recurDone:{}
   };
 }
@@ -893,21 +1043,31 @@ function defaultData() {
 // 2. Clé publishable (sb_publishable_...)  — sans danger côté navigateur
 const SUPABASE_URL = 'https://ulzomtdyrskyfcyzdusc.supabase.co';   // ← colle ton URL ici
 const SUPABASE_KEY = 'sb_publishable_NKqN-1MXe_l_L04nXPJNzA_lFus7TlM';   // ← colle ta clé publishable ici
-const SYNC_ROW_ID  = 'famille';  // identifiant de la ligne partagée (laisse tel quel)
+const SYNC_ROW_ID  = 'maison-k7Qm9pX2vR8nL4wZ';  // identifiant secret de la ligne partagée (ne pas changer)
 
 let sb = null;
 const syncEnabled = !!(SUPABASE_URL && SUPABASE_KEY && window.supabase);
 if (syncEnabled) {
-  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+  }
   catch(e){ console.warn('Supabase init échouée', e); }
 }
+let isAuthed = false;
 
 const LS_KEY = 'famille_taches_v3';
 
 function loadData() {
   try {
     const d = localStorage.getItem(LS_KEY);
-    if (d) return JSON.parse(d);
+    if (d){
+      const parsed = JSON.parse(d);
+      if(!Array.isArray(parsed.courses)) parsed.courses = [];
+      if(!Array.isArray(parsed.events)) parsed.events = [];
+      return parsed;
+    }
   } catch(e){}
   return defaultData();
 }
@@ -921,7 +1081,7 @@ function saveData(){
 
 let pushTimer = null;
 function pushRemote(){
-  if (!sb) return;
+  if (!sb || !isAuthed) return;
   // léger debounce : on évite d'envoyer 5 fois en 1 seconde
   clearTimeout(pushTimer);
   pushTimer = setTimeout(async ()=>{
@@ -939,7 +1099,7 @@ function pushRemote(){
 
 // Récupère la version distante ; ne remplace que si plus récente
 async function pullRemote(showToast=false){
-  if (!sb){ if(showToast) toast('Synchro non configurée','error'); return; }
+  if (!sb || !isAuthed){ if(showToast) toast('Connexion requise','error'); return; }
   setSyncStatus('syncing');
   try {
     const { data: rows, error } = await sb.from('maison_data')
@@ -951,6 +1111,8 @@ async function pullRemote(showToast=false){
       const localT  = data.updated_at || '';
       if (remoteT > localT){
         data = remote;
+        if(!Array.isArray(data.courses)) data.courses = [];
+        if(!Array.isArray(data.events)) data.events = [];
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -1067,6 +1229,7 @@ function showSection(id, btn, isMob=false){
 
   if(id==='calendar') renderCalendar();
   if(id==='stats') renderStats();
+  if(id==='today') renderToday();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1109,10 +1272,12 @@ function populateSelects(){
 // ══════════════════════════════════════════════════════
 function render(){
   updateBanner();
+  renderToday();
   renderFilters();
   renderTasks();
   renderRecurs();
   renderProjects();
+  renderCourses();
   renderSettings();
   updateNavBadges();
 }
@@ -1149,6 +1314,10 @@ function updateNavBadges(){
     if(a&&!data.recurDone[r.id+'_'+today]) rc++;
   });
   document.getElementById('nb-recur').textContent=rc;
+  // courses : nombre d'articles non cochés
+  const nc = (data.courses||[]).filter(c=>!c.done).length;
+  const cb = document.getElementById('nb-courses');
+  if(cb) cb.textContent = nc;
 }
 
 // ══════════════════════════════════════════════════════
@@ -1567,6 +1736,131 @@ function renderProjects(){
 }
 
 // ══════════════════════════════════════════════════════
+//  COURSES
+// ══════════════════════════════════════════════════════
+function renderToday(){
+  const box=document.getElementById('today-content');
+  if(!box) return;
+  const today=todayStr();
+  const d=dow();
+
+  // tâches du jour : échéance aujourd'hui ou en retard, non faites
+  const dayTasks=data.tasks.filter(t=>!t.done && t.deadline && t.deadline<=today)
+    .sort((a,b)=>(a.deadline||'').localeCompare(b.deadline||''));
+  // rdv du jour
+  const dayEvents=(data.events||[]).filter(e=>e.date===today)
+    .sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  // récurrences à faire aujourd'hui
+  const dayRecurs=data.recurs.filter(r=>{
+    const active=(r.freq==='daily')||(r.freq==='weekly'&&r.days&&r.days.map(Number).includes(d))||
+      (r.freq==='monthly'&&new Date().getDate()===1);
+    return active && !data.recurDone[r.id+'_'+today];
+  });
+
+  let html='';
+
+  // Rendez-vous
+  html+=`<div class="today-block">
+    <div class="today-head">📅 Rendez-vous</div>`;
+  if(dayEvents.length){
+    html+=dayEvents.map(e=>`
+      <div class="today-row">
+        <span class="today-time">${esc(e.time||'—')}</span>
+        <span class="today-txt">${esc(e.text)}</span>
+      </div>`).join('');
+  } else html+=`<div class="today-empty">Aucun rendez-vous aujourd'hui.</div>`;
+  html+=`</div>`;
+
+  // Tâches du jour / en retard
+  html+=`<div class="today-block">
+    <div class="today-head">📋 À faire ${dayTasks.length?`<span class="today-count">${dayTasks.length}</span>`:''}</div>`;
+  if(dayTasks.length){
+    html+=dayTasks.map(t=>{
+      const late=t.deadline<today;
+      return `<div class="today-row">
+        <div class="course-check" onclick="toggleTask('${t.id}');renderToday()"></div>
+        <span class="today-txt">${esc(t.title)}${late?' <span style="color:var(--red);font-size:11px;">en retard</span>':''}</span>
+        ${tName(t.theme)?`<span class="tag tag-theme">${tIcon(t.theme)} ${esc(tName(t.theme))}</span>`:''}
+      </div>`;
+    }).join('');
+  } else html+=`<div class="today-empty">Rien de prévu. Profite ! 🌿</div>`;
+  html+=`</div>`;
+
+  // Récurrences
+  html+=`<div class="today-block">
+    <div class="today-head">🔁 Routines ${dayRecurs.length?`<span class="today-count">${dayRecurs.length}</span>`:''}</div>`;
+  if(dayRecurs.length){
+    html+=dayRecurs.map(r=>`
+      <div class="today-row">
+        <div class="course-check" onclick="toggleRecur('${r.id}');renderToday()"></div>
+        <span class="today-txt">${r.icon} ${esc(r.title)}</span>
+      </div>`).join('');
+  } else html+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
+  html+=`</div>`;
+
+  box.innerHTML=html;
+}
+
+function renderCourses(){
+  const list=document.getElementById('courses-list');
+  if(!list) return;
+  const items=data.courses||[];
+  const remaining=items.filter(c=>!c.done).length;
+
+  // label + bouton "effacer les cochés"
+  const lbl=document.getElementById('courses-count-label');
+  if(lbl) lbl.textContent = items.length ? `— ${remaining} à acheter` : '';
+  const clr=document.getElementById('btn-clear-checked');
+  if(clr) clr.style.display = items.some(c=>c.done) ? '' : 'none';
+
+  if(!items.length){
+    list.innerHTML='<div class="empty"><div class="ico">🛒</div><div class="msg">La liste est vide. Ajoutez un article ci-dessus.</div></div>';
+    return;
+  }
+  // non cochés d'abord, puis cochés
+  const sorted=[...items].sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+  list.innerHTML=sorted.map(c=>`
+    <div class="course-item${c.done?' checked':''}">
+      <div class="course-check${c.done?' on':''}" onclick="toggleCourse('${c.id}')">${c.done?'✓':''}</div>
+      <span class="course-name" onclick="toggleCourse('${c.id}')">${esc(c.name)}</span>
+      <button class="btn-icon" onclick="deleteCourse('${c.id}')" data-tip="Retirer">🗑</button>
+    </div>`).join('');
+}
+
+function addCourse(){
+  const inp=document.getElementById('new-course-item');
+  const name=inp.value.trim();
+  if(!name) return;
+  if(!Array.isArray(data.courses)) data.courses=[];
+  data.courses.push({id:uid(),name,done:false});
+  inp.value='';
+  saveData(); renderCourses(); updateNavBadges();
+  inp.focus();
+}
+
+function toggleCourse(id){
+  const c=(data.courses||[]).find(x=>x.id===id);
+  if(!c) return;
+  c.done=!c.done;
+  saveData(); renderCourses(); updateNavBadges();
+}
+
+function deleteCourse(id){
+  data.courses=(data.courses||[]).filter(c=>c.id!==id);
+  saveData(); renderCourses(); updateNavBadges();
+}
+
+function clearCheckedCourses(){
+  const n=(data.courses||[]).filter(c=>c.done).length;
+  if(!n) return;
+  confirmAction(`Retirer les ${n} article(s) coché(s) ?`,()=>{
+    data.courses=(data.courses||[]).filter(c=>!c.done);
+    saveData(); renderCourses(); updateNavBadges();
+    toast('Articles cochés retirés');
+  });
+}
+
+// ══════════════════════════════════════════════════════
 //  CALENDAR
 // ══════════════════════════════════════════════════════
 const DAYS_FR=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
@@ -1606,17 +1900,75 @@ function renderCalendar(){
 function calCell(yr,mo,d,displayD,todayS,other){
   const ds=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   const tasks=data.tasks.filter(t=>t.deadline===ds&&!t.done);
+  const events=(data.events||[]).filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const isToday=ds===todayS;
-  let evHTML=tasks.slice(0,3).map(t=>{
-    const c=t.prio==='haute'?'#f5d8d8':t.prio==='basse'?'#d0e0f0':'#f0d9c8';
-    const tc=t.prio==='haute'?'#7a1a1a':t.prio==='basse'?'#1e4a7a':'#7a3a10';
+
+  // rendez-vous (sauge) en premier, puis échéances de tâches
+  let evHTML=events.slice(0,2).map(e=>{
+    const t=e.time?e.time+' ':'';
+    return `<div class="cal-event" style="background:var(--accent-l);color:#4a5536;font-weight:600;">${esc(t)}${esc(e.text)}</div>`;
+  }).join('');
+  evHTML+=tasks.slice(0,2).map(t=>{
+    const c=t.prio==='haute'?'#f0e0d8':t.prio==='basse'?'#dde8ec':'#e0e7d2';
+    const tc=t.prio==='haute'?'#8a4030':t.prio==='basse'?'#3a5560':'#4a5536';
     return `<div class="cal-event" style="background:${c};color:${tc};">${esc(t.title)}</div>`;
   }).join('');
-  if(tasks.length>3) evHTML+=`<div style="font-size:9px;color:var(--text3);">+${tasks.length-3}</div>`;
-  return `<div class="cal-cell${isToday?' today':''}${other?' other-month':''}">
+  const extra=(events.length>2?events.length-2:0)+(tasks.length>2?tasks.length-2:0);
+  if(extra>0) evHTML+=`<div style="font-size:9px;color:var(--text3);">+${extra}</div>`;
+
+  return `<div class="cal-cell${isToday?' today':''}${other?' other-month':''}" onclick="openDay('${ds}')">
     <div class="day-num">${displayD}</div>
     ${evHTML}
   </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDEZ-VOUS (events) — édition par jour
+// ══════════════════════════════════════════════════════
+function openDay(ds){
+  document.getElementById('day-date').value=ds;
+  const d=new Date(ds+'T00:00:00');
+  document.getElementById('modal-day-title').textContent=
+    d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('day-ev-text').value='';
+  document.getElementById('day-ev-time').value='';
+  renderDayEvents();
+  openModal('modal-day');
+}
+
+function renderDayEvents(){
+  const ds=document.getElementById('day-date').value;
+  const list=document.getElementById('day-events-list');
+  const events=(data.events||[]).filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  if(!events.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--text3);">Aucun rendez-vous ce jour.</div>';
+    return;
+  }
+  list.innerHTML=events.map(e=>`
+    <div class="course-item">
+      <span style="font-weight:700;color:var(--accent);min-width:46px;">${esc(e.time||'')}</span>
+      <span class="course-name">${esc(e.text)}</span>
+      <button class="btn-icon" onclick="deleteEvent('${e.id}')" data-tip="Supprimer">🗑</button>
+    </div>`).join('');
+}
+
+function addEvent(){
+  const ds=document.getElementById('day-date').value;
+  const text=document.getElementById('day-ev-text').value.trim();
+  const time=document.getElementById('day-ev-time').value;
+  if(!text){ toast('Écris le rendez-vous.','error'); return; }
+  if(!Array.isArray(data.events)) data.events=[];
+  data.events.push({id:uid(),date:ds,time,text});
+  document.getElementById('day-ev-text').value='';
+  document.getElementById('day-ev-time').value='';
+  saveData(); renderDayEvents(); renderCalendar();
+  toast('Rendez-vous ajouté ✓','success');
+  document.getElementById('day-ev-text').focus();
+}
+
+function deleteEvent(id){
+  data.events=(data.events||[]).filter(e=>e.id!==id);
+  saveData(); renderDayEvents(); renderCalendar();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1670,16 +2022,19 @@ function renderStats(){
 function renderSettings(){
   document.getElementById('person-list').innerHTML=data.persons.map(p=>`
     <div class="settings-row">
-      <div class="avatar" style="background:${p.color};">${p.name[0]}</div>
-      <span style="flex:1;font-weight:500;">${esc(p.name)}</span>
+      <div class="avatar" style="background:${p.color};">${esc(p.name[0]||'?')}</div>
+      <input class="inp" style="flex:1;padding:6px 10px;" value="${esc(p.name)}" onchange="renamePerson('${p.id}',this.value)">
       <input type="color" value="${p.color}" style="width:28px;height:28px;border:none;background:none;cursor:pointer;border-radius:50%;" onchange="updatePersonColor('${p.id}',this.value)">
       <button class="btn-icon" onclick="confirmAction('Supprimer ${esc(p.name)} ?',()=>deletePerson('${p.id}'))">🗑</button>
     </div>`).join('');
 
+  const iconOpts = ['🌿','🏠','🐔','🌱','🔨','🍳','🛒','💊','🚗','📚','🐕','🌳','🧹','🧺','🧽','🪣','🐈','🐎','🐰','🐠','💡','🔧','🪚','🪛','📄','💰','🎒','⚽','🌸','🍅','🥚','🪴'];
   document.getElementById('theme-list').innerHTML=data.themes.map(t=>`
     <div class="settings-row">
-      <span style="font-size:18px;">${t.icon}</span>
-      <span style="flex:1;font-weight:500;">${esc(t.name)}</span>
+      <select class="inp" style="flex:0 0 auto;width:auto;padding:4px;font-size:18px;" onchange="updateThemeIcon('${t.id}',this.value)">
+        ${iconOpts.map(ic=>`<option${ic===t.icon?' selected':''}>${ic}</option>`).join('')}
+      </select>
+      <input class="inp" style="flex:1;padding:6px 10px;" value="${esc(t.name)}" onchange="renameTheme('${t.id}',this.value)">
       <button class="btn-icon" onclick="confirmAction('Supprimer ce thème ?',()=>deleteTheme('${t.id}'))">🗑</button>
     </div>`).join('');
 }
@@ -1698,6 +2053,20 @@ function deletePerson(id){
 function updatePersonColor(id,color){
   const p=data.persons.find(x=>x.id===id);
   if(p){ p.color=color; saveData(); render(); }
+}
+function renamePerson(id,name){
+  name=name.trim(); if(!name) return;
+  const p=data.persons.find(x=>x.id===id);
+  if(p){ p.name=name; saveData(); render(); toast('Renommé ✓','success'); }
+}
+function renameTheme(id,name){
+  name=name.trim(); if(!name) return;
+  const t=data.themes.find(x=>x.id===id);
+  if(t){ t.name=name; saveData(); render(); toast('Renommé ✓','success'); }
+}
+function updateThemeIcon(id,icon){
+  const t=data.themes.find(x=>x.id===id);
+  if(t){ t.icon=icon; saveData(); render(); }
 }
 function addTheme(){
   const name=document.getElementById('new-theme-name').value.trim();
@@ -1754,6 +2123,57 @@ document.addEventListener('keydown', e=>{
 });
 
 // ══════════════════════════════════════════════════════
+//  AUTHENTIFICATION
+// ══════════════════════════════════════════════════════
+function showLogin(){
+  const s=document.getElementById('login-screen');
+  if(s) s.classList.remove('hidden');
+  // pré-remplit l'email connu pour aller plus vite
+  const em=document.getElementById('login-email');
+  if(em && !em.value) em.value='cedricplat@mailo.com';
+}
+function hideLogin(){
+  const s=document.getElementById('login-screen');
+  if(s) s.classList.add('hidden');
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  err.textContent='';
+  if(!email || !pass){ err.textContent='Email et mot de passe requis.'; return; }
+  if(!sb){ err.textContent='Service indisponible.'; return; }
+  btn.disabled=true; btn.textContent='Connexion…';
+  try{
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error) throw error;
+    isAuthed=true;
+    document.getElementById('login-pass').value='';
+    hideLogin();
+    startSync();
+  }catch(e){
+    err.textContent='Email ou mot de passe incorrect.';
+    console.warn('Login échoué', e);
+  }finally{
+    btn.disabled=false; btn.textContent='Se connecter';
+  }
+}
+
+async function doLogout(){
+  if(sb){ try{ await sb.auth.signOut(); }catch(e){} }
+  isAuthed=false;
+  showLogin();
+  toast('Déconnecté');
+}
+
+function startSync(){
+  setSyncStatus('syncing');
+  pullRemote(false);
+}
+
+// ══════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════
 render();
@@ -1761,14 +2181,23 @@ render();
 // Étiquette d'info synchro dans Réglages
 (function(){
   const lbl=document.getElementById('sync-info-label');
-  if(lbl) lbl.textContent = syncEnabled ? 'activée ✓.' : 'non configurée (renseignez SUPABASE_URL et SUPABASE_KEY en haut du fichier).';
+  if(lbl) lbl.textContent = syncEnabled ? 'activée ✓ (connexion sécurisée).' : 'non configurée.';
 })();
+
 if (syncEnabled){
-  setSyncStatus('syncing');
-  pullRemote(false);
-  // resynchronise quand l'app revient au premier plan (ex: on rouvre l'onglet)
-  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) pullRemote(false); });
+  // par défaut on montre la connexion, on la cache si session valide
+  showLogin();
+  sb.auth.getSession().then(({ data })=>{
+    if(data && data.session){
+      isAuthed=true;
+      hideLogin();
+      startSync();
+    }
+  }).catch((e)=>{ console.warn('getSession', e); });
+  // resynchronise au retour sur l'app, seulement si connecté
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && isAuthed) pullRemote(false); });
 } else {
+  hideLogin();
   const el = document.getElementById('sync-status');
   if(el){ el.textContent='⚪ Local'; el.style.color='var(--text3)'; }
 }
