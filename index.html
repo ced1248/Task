@@ -557,9 +557,15 @@ header{
 .meal-day.is-today{border-color:var(--accent);border-width:2px;}
 .meal-day-name{font-weight:700;font-size:13px;color:var(--text);margin-bottom:8px;text-transform:capitalize;}
 .meal-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.meal-slot{display:flex;flex-direction:column;gap:4px;}
-.meal-slot-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;}
-.meal-input-row{display:flex;gap:4px;}
+.meal-rows{display:flex;flex-direction:column;gap:10px;}
+.meal-row{display:flex;align-items:center;gap:10px;}
+.meal-tag{
+  flex:0 0 64px;text-align:center;
+  background:var(--accent-l);color:#4a5536;
+  border-radius:var(--r2);padding:8px 6px;
+  font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+}
+.meal-field{flex:1;display:flex;gap:6px;min-width:0;}
 .meal-input{
   flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);
   padding:6px 9px;font-family:'Syne',sans-serif;font-size:12px;color:var(--text);outline:none;min-width:0;
@@ -2460,16 +2466,16 @@ function renderMeals(){
       </select>`;
     };
     const slot=(key,lbl)=>`
-      <div class="meal-slot">
-        <span class="meal-slot-label">${lbl}</span>
-        <div class="meal-input-row">
-          <input class="meal-input" value="${esc(m[key]||'')}" placeholder="—" onchange="setMeal('${ds}','${key}',this.value)">
+      <div class="meal-row">
+        <span class="meal-tag">${lbl}</span>
+        <div class="meal-field">
+          <input class="meal-input" value="${esc(m[key]||'')}" placeholder="Ajouter un plat…" onchange="setMeal('${ds}','${key}',this.value)">
           ${recipeMenu(key)}
         </div>
       </div>`;
     return `<div class="meal-day${ds===today?' is-today':''}">
       <div class="meal-day-name">${name} ${cur.getDate()}</div>
-      <div class="meal-slots">${slot('midi','Midi')}${slot('soir','Soir')}</div>
+      <div class="meal-rows">${slot('midi','Midi')}${slot('soir','Soir')}</div>
     </div>`;
   }).join('');
 
