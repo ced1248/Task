@@ -2250,16 +2250,22 @@ function renderToday(){
   } else html+=`<div class="today-empty">Rien de prévu. Profite ! 🌿</div>`;
   html+=`</div>`;
 
-  // Récurrences (stockées pour affichage en bas, après Ma semaine)
+  // Récurrences (stockées pour affichage en bas, après Ma semaine) — repliable
+  const routinesHidden = localStorage.getItem('routines_hidden')==='1';
   let routinesHTML=`<div class="today-block">
-    <div class="today-head">🔁 Routines ${dayRecurs.length?`<span class="today-count">${dayRecurs.length}</span>`:''}</div>`;
-  if(dayRecurs.length){
-    routinesHTML+=dayRecurs.map(r=>`
-      <div class="today-row">
-        <div class="course-check" onclick="toggleRecur('${r.id}');renderToday()"></div>
-        <span class="today-txt">${r.icon} ${esc(r.title)}</span>
-      </div>`).join('');
-  } else routinesHTML+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
+    <div class="today-head" style="cursor:pointer;display:flex;align-items:center;" onclick="toggleRoutines()">
+      <span>🔁 Routines ${dayRecurs.length?`<span class="today-count">${dayRecurs.length}</span>`:''}</span>
+      <span style="margin-left:auto;font-size:13px;color:var(--text3);">${routinesHidden?'▸ afficher':'▾ masquer'}</span>
+    </div>`;
+  if(!routinesHidden){
+    if(dayRecurs.length){
+      routinesHTML+=dayRecurs.map(r=>`
+        <div class="today-row">
+          <div class="course-check" onclick="toggleRecur('${r.id}');renderToday()"></div>
+          <span class="today-txt">${r.icon} ${esc(r.title)}</span>
+        </div>`).join('');
+    } else routinesHTML+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
+  }
   routinesHTML+=`</div>`;
 
   // ─── Repas du jour ───
@@ -2544,6 +2550,12 @@ function renderMeals(){
         </div>`).join('')
       : '<div style="font-size:12px;color:var(--text3);">Aucune recette. Ajoutez vos plats habituels ci-dessous.</div>';
   }
+}
+
+function toggleRoutines(){
+  const hidden = localStorage.getItem('routines_hidden')==='1';
+  localStorage.setItem('routines_hidden', hidden?'0':'1');
+  renderToday();
 }
 
 function setMeal(ds,key,val){
