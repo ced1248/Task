@@ -83,6 +83,10 @@ html.theme-lavande{
 *{box-sizing:border-box;margin:0;padding:0;}
 
 html,body{max-width:100%;overflow-x:hidden;}
+/* transitions douces lors des changements de thème de couleur */
+.task-item,.course-item,.achat-item,.proj-card,.recur-card,.today-block,.cal-cell,header,.mob-nav,.sidebar{
+  transition:background-color .25s ease,border-color .25s ease,color .25s ease,box-shadow .22s ease;
+}
 
 body{
   font-family:'Syne',sans-serif;
@@ -1461,9 +1465,14 @@ function openModal(id){
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
+  if(id==='modal-day' && calNeedsRefresh){
+    calNeedsRefresh=false;
+    if(currentSection==='calendar') renderCalendar();
+    if(currentSection==='today') renderToday();
+  }
 }
 document.querySelectorAll('.overlay').forEach(m=>{
-  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+  m.addEventListener('click', e=>{ if(e.target===m){ m.classList.remove('open'); if(m.id==='modal-day'&&calNeedsRefresh){calNeedsRefresh=false; if(currentSection==='calendar') renderCalendar(); if(currentSection==='today') renderToday();} } });
 });
 
 // ══════════════════════════════════════════════════════
@@ -1497,6 +1506,24 @@ function render(){
   renderAchats();
   renderSettings();
   updateNavBadges();
+}
+
+// Rafraîchissement léger : ne redessine que la vue active + les compteurs.
+// Évite le scintillement causé par un render() complet sur chaque petite action.
+function refresh(){
+  updateBanner();
+  updateNavBadges();
+  switch(currentSection){
+    case 'today': renderToday(); break;
+    case 'tasks': renderTasks(); break;
+    case 'recur': renderRecurs(); break;
+    case 'projects': renderProjects(); break;
+    case 'courses': renderCourses(); break;
+    case 'achats': renderAchats(); break;
+    case 'calendar': renderCalendar(); break;
+    case 'settings': renderSettings(); break;
+    case 'stats': if(typeof renderStats==='function') renderStats(); break;
+  }
 }
 
 // ── Thème de couleur ──
@@ -1821,7 +1848,7 @@ function toggleTask(id){
   if(!t) return;
   t.done=!t.done;
   if(t.done) t.doneAt=new Date().toISOString();
-  saveData(); render();
+  saveData(); refresh();
   if(t.done) toast('✅ Tâche terminée !','success');
 }
 
@@ -2358,7 +2385,7 @@ function renderCalendar(){
   const total=firstDow+daysInMonth;
   const remaining=(7-total%7)%7;
   for(let d=1;d<=remaining;d++){
-    html+=calCell(yr,mo+1>11?yr+1:yr,mo+1>11?0:mo+1,d,todayS,true);
+    html+=calCell(mo+1>11?yr+1:yr,mo+1>11?0:mo+1,d,d,todayS,true);
   }
   grid.innerHTML=html;
 }
@@ -2449,8 +2476,11 @@ function setDayMark(pid,type){
   } else {
     data.dayMarks[ds][pid]=type;
   }
-  saveData(); renderDayMarks(); renderCalendar(); renderToday();
+  saveData();
+  renderDayMarks();   // seul le contenu du modal est mis à jour en direct
+  calNeedsRefresh=true;  // le calendrier sera rafraîchi à la fermeture du modal
 }
+let calNeedsRefresh=false;
 
 function renderDayTaskSelect(){
   const sel=document.getElementById('day-task-select');
