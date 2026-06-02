@@ -229,6 +229,15 @@ header{
   font-size:1.2rem;flex:1;
 }
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.filter-search{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:8px 12px;margin-bottom:12px;
+}
+.filter-search input{
+  flex:1;background:none;border:none;outline:none;
+  font-family:'Syne',sans-serif;font-size:13px;color:var(--text);
+}
 .chip{
   padding:5px 12px;border:1px solid var(--border);
   border-radius:var(--r3);background:var(--card);
@@ -742,7 +751,7 @@ header{
   <main class="main">
 
     <!-- TODAY BANNER -->
-    <div class="today-banner">
+    <div class="today-banner" id="today-banner">
       <div class="today-left">
         <div class="date-line" id="today-date-str"></div>
         <div class="greet" id="greet-text">Bonjour !</div>
@@ -764,6 +773,7 @@ header{
     <div class="section hidden" id="s-tasks">
       <div class="toolbar">
         <div class="toolbar-title">Tâches</div>
+        <button class="btn btn-secondary btn-sm" id="btn-filters" onclick="toggleFilters()">⚙ Filtres</button>
         <select class="sort-select" id="sort-select" onchange="renderTasks()">
           <option value="smart">Tri intelligent</option>
           <option value="deadline">Échéance</option>
@@ -772,14 +782,20 @@ header{
           <option value="alpha">A → Z</option>
         </select>
       </div>
-      <div class="filter-row" id="fp-persons"></div>
-      <div class="filter-row" id="fp-themes"></div>
-      <div class="filter-row" id="fp-prio">
-        <button class="chip active" onclick="setFilter('prio','',this)">Toutes</button>
-        <button class="chip" onclick="setFilter('prio','haute',this)">🔴 Haute</button>
-        <button class="chip" onclick="setFilter('prio','moyenne',this)">🟠 Moyenne</button>
-        <button class="chip" onclick="setFilter('prio','basse',this)">🔵 Basse</button>
-        <button class="chip" onclick="setFilter('prio','done',this)">✅ Terminées</button>
+      <div id="filters-panel" class="hidden">
+        <div class="filter-search">
+          <span>🔍</span>
+          <input type="text" id="tasks-search" placeholder="Rechercher une tâche…" oninput="onSearch(this.value)">
+        </div>
+        <div class="filter-row" id="fp-persons"></div>
+        <div class="filter-row" id="fp-themes"></div>
+        <div class="filter-row" id="fp-prio">
+          <button class="chip active" onclick="setFilter('prio','',this)">Toutes</button>
+          <button class="chip" onclick="setFilter('prio','haute',this)">🔴 Haute</button>
+          <button class="chip" onclick="setFilter('prio','moyenne',this)">🟠 Moyenne</button>
+          <button class="chip" onclick="setFilter('prio','basse',this)">🔵 Basse</button>
+          <button class="chip" onclick="setFilter('prio','done',this)">✅ Terminées</button>
+        </div>
       </div>
       <div class="tasks-list" id="task-list"></div>
     </div>
@@ -1321,6 +1337,9 @@ function showSection(id, btn, isMob=false){
   if(id==='stats') renderStats();
   if(id==='today') renderToday();
   if(id==='achats') renderAchats();
+  // bandeau "Bonjour" visible uniquement sur la vue Aujourd'hui
+  const banner=document.getElementById('today-banner');
+  if(banner) banner.style.display = (id==='today') ? '' : 'none';
 }
 
 // ══════════════════════════════════════════════════════
@@ -1435,6 +1454,23 @@ function setFilter(type,val,btn){
   if(row) row.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTasks();
+  updateFilterBtn();
+}
+
+let filtersOpen=false;
+function toggleFilters(){
+  filtersOpen=!filtersOpen;
+  const panel=document.getElementById('filters-panel');
+  if(panel) panel.classList.toggle('hidden', !filtersOpen);
+  updateFilterBtn();
+}
+function updateFilterBtn(){
+  const btn=document.getElementById('btn-filters');
+  if(!btn) return;
+  const active = !!(fPerson||fTheme||fPrio||searchQ);
+  btn.textContent = filtersOpen ? '⚙ Masquer' : (active ? '⚙ Filtres •' : '⚙ Filtres');
+  btn.classList.toggle('btn-primary', active && !filtersOpen);
+  btn.classList.toggle('btn-secondary', !(active && !filtersOpen));
 }
 
 // ══════════════════════════════════════════════════════
@@ -1443,6 +1479,7 @@ function setFilter(type,val,btn){
 function onSearch(q){
   searchQ=q.toLowerCase();
   renderTasks();
+  updateFilterBtn();
 }
 
 // ══════════════════════════════════════════════════════
