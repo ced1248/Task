@@ -41,6 +41,44 @@
   --r:       22px;
   --r2:      16px;
   --r3:      28px;
+  /* couleurs structurantes (header + bandeau) */
+  --header:    #5c6a4c;
+  --header-tx: #f6f8f0;
+  --header-ac: #cfe0b8;
+  --band1:     #7a8a64;
+  --band2:     #6a7a58;
+}
+
+/* ── Thème Rose poudré ── */
+html.theme-rose{
+  --bg:#f4eeec; --bg2:#ece2df; --bg3:#e0d2cd;
+  --card:#fbf6f5; --card2:#f5edeb;
+  --border:#e3d6d2; --border2:#cdbab4;
+  --text:#473a37; --text2:#7a6660; --text3:#a89690;
+  --accent:#b88a82; --accent-l:#f0dfdb;
+  --green:#9aa86f; --green-l:#e6ecd4;
+  --blue:#9a8aa8; --blue-l:#e7e0ec;
+  --red:#c08878; --red-l:#f2e2dc;
+  --done:#9aa86f;
+  --shadow:0 4px 20px rgba(110,85,80,.08); --shadow2:0 10px 40px rgba(110,85,80,.14);
+  --header:#8a6a64; --header-tx:#faf3f1; --header-ac:#f0d6cf;
+  --band1:#a88179; --band2:#967069;
+}
+
+/* ── Thème Bleu lavande ── */
+html.theme-lavande{
+  --bg:#ecedf2; --bg2:#e2e4ec; --bg3:#d2d6e2;
+  --card:#f6f7fb; --card2:#eef0f6;
+  --border:#d6dae6; --border2:#bac0d2;
+  --text:#373a47; --text2:#60667a; --text3:#9095a8;
+  --accent:#8a92b8; --accent-l:#dfe2f0;
+  --green:#7a94a0; --green-l:#dde7ec;
+  --blue:#7d8ba8; --blue-l:#dde2ec;
+  --red:#b88898; --red-l:#f0dde4;
+  --done:#7a94a0;
+  --shadow:0 4px 20px rgba(80,85,110,.08); --shadow2:0 10px 40px rgba(80,85,110,.14);
+  --header:#5e6488; --header-tx:#f4f5fb; --header-ac:#cfd4ef;
+  --band1:#7a82b0; --band2:#6a72a0;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 
@@ -63,7 +101,7 @@ body{
 /* ── LOGIN ─────────────────────────────────────────── */
 #login-screen{
   position:fixed;inset:0;z-index:5000;
-  background:linear-gradient(160deg,#6a7a58,#5c6a4c);
+  background:linear-gradient(160deg,var(--band2),var(--header));
   display:flex;align-items:center;justify-content:center;
   padding:24px;
   padding-top:calc(24px + env(safe-area-inset-top));
@@ -93,7 +131,7 @@ body{
   background:var(--accent);color:white;font-family:'Syne',sans-serif;
   font-size:14px;font-weight:600;cursor:pointer;transition:background .18s;
 }
-.login-btn:hover{background:#76855d;}
+.login-btn:hover{background:var(--band2);}
 .login-btn:disabled{opacity:.6;cursor:default;}
 
 /* ── TOAST ─────────────────────────────────────────── */
@@ -116,8 +154,8 @@ body{
 
 /* ── HEADER ─────────────────────────────────────────── */
 header{
-  background:#5c6a4c;
-  color:#f6f8f0;
+  background:var(--header);
+  color:var(--header-tx);
   padding:10px 28px;
   display:flex;flex-direction:column;gap:8px;
   position:sticky;top:0;z-index:200;
@@ -130,7 +168,7 @@ header{
   font-size:1.5rem;letter-spacing:.3px;
   display:flex;align-items:center;gap:10px;
 }
-.logo span{color:#cfe0b8;font-style:italic;}
+.logo span{color:var(--header-ac);font-style:italic;}
 .header-search{
   display:flex;align-items:center;gap:8px;
   background:rgba(255,255,255,.1);
@@ -156,7 +194,7 @@ header{
 }
 .btn-h:hover{background:rgba(255,255,255,.18);}
 .btn-h.primary{background:var(--accent);border-color:var(--accent);}
-.btn-h.primary:hover{background:#76855d;}
+.btn-h.primary:hover{background:var(--band2);}
 
 /* ── LAYOUT ──────────────────────────────────────────── */
 .app-shell{display:flex;min-height:calc(100vh - var(--header-h,92px));}
@@ -204,8 +242,8 @@ header{
 
 /* ── TODAY BANNER ──────────────────────────────────── */
 .today-banner{
-  background:linear-gradient(135deg,#7a8a64,#6a7a58);
-  color:#f6f8f0;border-radius:var(--r);
+  background:linear-gradient(135deg,var(--band1),var(--band2));
+  color:var(--header-tx);border-radius:var(--r);
   padding:14px 24px;margin-bottom:18px;
   display:flex;align-items:center;justify-content:space-between;
   flex-wrap:wrap;gap:14px;
@@ -245,7 +283,7 @@ header{
   cursor:pointer;transition:all .15s;font-family:'Syne',sans-serif;
 }
 .chip:hover{background:var(--bg2);border-color:var(--border2);}
-.chip.active{background:#7a8a64;color:white;border-color:#7a8a64;}
+.chip.active{background:var(--band1);color:white;border-color:var(--band1);}
 .chip.accent-active{background:var(--accent);color:white;border-color:var(--accent);}
 
 /* Sort control */
@@ -493,6 +531,13 @@ header{
 
 /* ── SETTINGS ───────────────────────────────────────────── */
 .settings-block{margin-bottom:28px;}
+.theme-picker{display:flex;gap:12px;}
+.theme-swatch{
+  width:48px;height:48px;border-radius:50%;border:3px solid transparent;
+  cursor:pointer;transition:transform .15s,border-color .15s;
+}
+.theme-swatch:hover{transform:scale(1.08);}
+.theme-swatch.active{border-color:var(--text);}
 .settings-block h3{
   font-size:11px;font-weight:700;letter-spacing:1px;
   color:var(--text3);text-transform:uppercase;margin-bottom:12px;
@@ -524,7 +569,7 @@ header{
   cursor:pointer;border:none;transition:all .18s;
 }
 .btn-primary{background:var(--accent);color:white;}
-.btn-primary:hover{background:#76855d;}
+.btn-primary:hover{background:var(--band2);}
 .btn-secondary{background:transparent;color:var(--text2);border:1px solid var(--border);}
 .btn-secondary:hover{background:var(--bg2);}
 .btn-danger{background:transparent;color:var(--red);border:1px solid var(--red-l);}
@@ -599,7 +644,7 @@ header{
   .sidebar{display:none;}
   .mob-nav{
     position:fixed;bottom:0;left:0;right:0;z-index:200;
-    background:#5c6a4c;
+    background:var(--header);
     display:flex;border-top:1px solid rgba(255,255,255,.08);
     padding-bottom:env(safe-area-inset-bottom);
     box-shadow:0 -2px 16px rgba(90,100,75,.14);
@@ -612,7 +657,7 @@ header{
     transition:color .15s;
   }
   .mob-nav-item .icon{font-size:19px;}
-  .mob-nav-item.active{color:#cfe0b8;}
+  .mob-nav-item.active{color:var(--header-ac);}
 
   /* layout type "app" : header figé en haut, nav figée en bas,
      seul le contenu défile entre les deux → la barre du bas ne bouge plus */
@@ -695,7 +740,6 @@ header{
 <header>
   <div class="header-row1">
     <div class="logo">🏠 <span>Maison</span></div>
-    <span id="sync-status" style="font-size:11px;font-weight:600;white-space:nowrap;"></span>
   </div>
   <div class="header-row2">
     <div class="header-search">
@@ -867,6 +911,15 @@ header{
     <!-- ═══ SECTION: RÉGLAGES ═══ -->
     <div class="section hidden" id="s-settings">
       <div class="toolbar-title" style="margin-bottom:20px;">Réglages</div>
+
+      <div class="settings-block">
+        <h3>Couleur de l'application</h3>
+        <div class="theme-picker">
+          <button class="theme-swatch" data-theme="sauge" onclick="setColorTheme('sauge')" style="background:linear-gradient(135deg,#8a9a6f,#5c6a4c);" title="Sauge"></button>
+          <button class="theme-swatch" data-theme="rose" onclick="setColorTheme('rose')" style="background:linear-gradient(135deg,#b88a82,#8a6a64);" title="Rose poudré"></button>
+          <button class="theme-swatch" data-theme="lavande" onclick="setColorTheme('lavande')" style="background:linear-gradient(135deg,#8a92b8,#5e6488);" title="Bleu lavande"></button>
+        </div>
+      </div>
 
       <div class="settings-block">
         <h3>Membres de la famille</h3>
@@ -1381,6 +1434,7 @@ function populateSelects(){
 //  RENDER ENTRY
 // ══════════════════════════════════════════════════════
 function render(){
+  applyColorTheme();
   updateBanner();
   renderToday();
   renderFilters();
@@ -1391,6 +1445,24 @@ function render(){
   renderAchats();
   renderSettings();
   updateNavBadges();
+}
+
+// ── Thème de couleur ──
+function applyColorTheme(){
+  const t = (data && data.theme) ? data.theme : 'sauge';
+  document.documentElement.classList.remove('theme-rose','theme-lavande');
+  if(t==='rose') document.documentElement.classList.add('theme-rose');
+  else if(t==='lavande') document.documentElement.classList.add('theme-lavande');
+  // surligne la pastille active dans Réglages
+  document.querySelectorAll('.theme-swatch').forEach(s=>{
+    s.classList.toggle('active', s.dataset.theme===t);
+  });
+}
+function setColorTheme(t){
+  data.theme = t;
+  saveData();
+  applyColorTheme();
+  toast('Couleur appliquée ✓','success');
 }
 
 // ══════════════════════════════════════════════════════
