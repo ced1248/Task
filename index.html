@@ -994,6 +994,7 @@ header{
           <input class="inp" type="text" id="new-recipe" placeholder="Ajouter une recette…" style="flex:1;" onkeydown="if(event.key==='Enter')addRecipe()">
           <button class="btn btn-primary" onclick="addRecipe()">Ajouter</button>
         </div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px;" onclick="addBaseRecipes()">📚 Ajouter 50 recettes de base</button>
       </div>
     </div>
 
@@ -2552,6 +2553,79 @@ function setMeal(ds,key,val){
   if(val) data.meals[ds][key]=val;
   else { delete data.meals[ds][key]; if(!Object.keys(data.meals[ds]).length) delete data.meals[ds]; }
   saveData();
+}
+
+// Banque de 50 recettes de base (classiques + végétariennes)
+function recipeBank(){
+  const V=true, N=false;
+  const r=(name,veg,ingredients,steps)=>({name,veg,ingredients,steps});
+  return [
+    r('Spaghetti bolognaise',N,'Spaghetti, bœuf haché, coulis de tomate, oignon, ail, carotte, huile d\'olive, herbes de Provence','Faire revenir oignon et ail. Ajouter la viande, faire dorer. Ajouter carotte râpée et coulis. Mijoter 30 min. Cuire les pâtes, servir.'),
+    r('Poulet rôti & pommes de terre',N,'Poulet fermier, pommes de terre, beurre, thym, ail, sel, poivre','Préchauffer à 200°C. Badigeonner le poulet de beurre. Disposer les pommes de terre autour. Cuire 1h15 en arrosant.'),
+    r('Quiche lorraine',N,'Pâte brisée, lardons, 3 œufs, 20cl crème, 20cl lait, muscade','Étaler la pâte. Faire revenir les lardons. Battre œufs, crème, lait. Verser. Cuire 35 min à 180°C.'),
+    r('Gratin dauphinois',V,'Pommes de terre, 50cl crème, 25cl lait, ail, beurre, muscade','Émincer les pommes de terre. Frotter le plat d\'ail. Disposer en couches, couvrir de crème et lait. Cuire 1h à 160°C.'),
+    r('Curry de légumes',V,'Courgette, carotte, pois chiches, lait de coco, oignon, ail, curry, riz','Faire revenir oignon et ail. Ajouter légumes et curry. Verser lait de coco et pois chiches. Mijoter 25 min. Servir avec riz.'),
+    r('Risotto aux champignons',V,'Riz arborio, champignons, oignon, vin blanc, bouillon, parmesan, beurre','Revenir oignon et champignons. Nacrer le riz. Déglacer au vin. Ajouter le bouillon louche par louche. Finir parmesan et beurre.'),
+    r('Omelette aux herbes',V,'6 œufs, persil, ciboulette, beurre, sel, poivre','Battre les œufs avec les herbes. Fondre le beurre, verser. Cuire à feu doux, plier et servir.'),
+    r('Soupe de légumes',V,'Poireau, carotte, pomme de terre, oignon, bouillon','Couper les légumes. Couvrir d\'eau et bouillon. Cuire 30 min. Mixer, assaisonner.'),
+    r('Chili sin carne',V,'Haricots rouges, maïs, tomates, poivron, oignon, ail, cumin, paprika, riz','Revenir oignon, ail, poivron. Ajouter épices, tomates, haricots, maïs. Mijoter 25 min. Servir avec riz.'),
+    r('Tartiflette',N,'Pommes de terre, reblochon, lardons, oignon, vin blanc, crème','Cuire les pommes de terre. Revenir lardons et oignon. Mélanger, ajouter crème. Couvrir de reblochon. Gratiner 20 min à 200°C.'),
+    r('Lasagnes',N,'Pâtes à lasagnes, bœuf haché, coulis de tomate, béchamel, oignon, parmesan','Préparer une sauce bolognaise. Alterner pâtes, bolognaise et béchamel. Couvrir de parmesan. Cuire 40 min à 180°C.'),
+    r('Hachis parmentier',N,'Bœuf haché, pommes de terre, lait, beurre, oignon, fromage râpé','Faire une purée. Revenir la viande avec oignon. Disposer viande puis purée. Parsemer de fromage. Gratiner 25 min.'),
+    r('Blanquette de veau',N,'Veau, carotte, oignon, champignons, crème, jaune d\'œuf, bouillon, riz','Cuire le veau dans le bouillon avec légumes 1h30. Lier la sauce crème et jaune d\'œuf. Servir avec du riz.'),
+    r('Pot-au-feu',N,'Bœuf à mijoter, carotte, poireau, navet, pomme de terre, oignon piqué de clous de girofle','Couvrir la viande d\'eau, écumer. Ajouter les légumes. Mijoter 3h à feu doux. Servir avec moutarde.'),
+    r('Gratin de courgettes',V,'Courgettes, riz, œufs, crème, fromage râpé, oignon','Cuire courgettes et riz. Mélanger avec œufs, crème et oignon. Verser dans un plat, fromage dessus. Gratiner 30 min.'),
+    r('Ratatouille',V,'Aubergine, courgette, poivron, tomate, oignon, ail, huile d\'olive, thym','Couper tous les légumes. Revenir séparément puis réunir. Mijoter 45 min à couvert. Servir chaud ou froid.'),
+    r('Quiche aux légumes',V,'Pâte brisée, courgette, poireau, 3 œufs, crème, fromage râpé','Revenir les légumes. Battre œufs et crème. Verser sur les légumes dans la pâte. Cuire 35 min à 180°C.'),
+    r('Croque-monsieur',N,'Pain de mie, jambon, fromage, béchamel ou beurre','Beurrer le pain. Garnir de jambon et fromage. Dorer à la poêle ou au four 10 min.'),
+    r('Salade César',N,'Salade romaine, poulet, croûtons, parmesan, sauce césar','Griller le poulet. Mélanger salade, croûtons, parmesan. Ajouter le poulet et la sauce.'),
+    r('Saumon & riz',N,'Pavé de saumon, riz, citron, beurre, aneth','Cuire le riz. Poêler le saumon 4 min par face. Arroser de citron et beurre. Parsemer d\'aneth.'),
+    r('Pâtes carbonara',N,'Pâtes, lardons, 3 jaunes d\'œuf, parmesan, poivre','Cuire les pâtes. Revenir les lardons. Hors du feu, mélanger jaunes et parmesan aux pâtes chaudes. Poivrer.'),
+    r('Pâtes pesto',V,'Pâtes, pesto, parmesan, pignons','Cuire les pâtes. Mélanger avec le pesto. Parsemer de parmesan et pignons.'),
+    r('Pizza maison',V,'Pâte à pizza, coulis de tomate, mozzarella, origan, garniture au choix','Étaler la pâte. Étaler le coulis, la mozzarella et la garniture. Cuire 12 min à 240°C.'),
+    r('Tian de légumes',V,'Courgette, tomate, aubergine, oignon, huile d\'olive, herbes','Émincer les légumes en rondelles. Disposer en rosace. Arroser d\'huile et d\'herbes. Cuire 50 min à 180°C.'),
+    r('Couscous',N,'Semoule, agneau ou poulet, pois chiches, carotte, courgette, navet, épices à couscous','Cuire la viande avec les légumes et épices. Préparer la semoule. Servir ensemble avec le bouillon.'),
+    r('Tajine de poulet',N,'Poulet, citron confit, olives, oignon, gingembre, curcuma, coriandre','Revenir le poulet et l\'oignon. Ajouter épices, citron, olives. Mijoter 45 min. Servir avec semoule.'),
+    r('Dahl de lentilles',V,'Lentilles corail, lait de coco, tomate, oignon, ail, gingembre, curcuma, cumin','Revenir oignon, ail, gingembre. Ajouter épices, lentilles, tomate, lait de coco. Mijoter 25 min.'),
+    r('Buddha bowl',V,'Quinoa, pois chiches, avocat, carotte, chou rouge, sauce tahini','Cuire le quinoa. Disposer tous les ingrédients dans un bol. Arroser de sauce tahini.'),
+    r('Soupe à l\'oignon',V,'Oignons, bouillon, pain, fromage râpé, beurre','Faire compoter les oignons au beurre. Ajouter le bouillon, mijoter 20 min. Gratiner avec pain et fromage.'),
+    r('Velouté de potiron',V,'Potiron, pomme de terre, oignon, crème, bouillon, muscade','Cuire potiron, pomme de terre et oignon dans le bouillon. Mixer avec la crème. Assaisonner.'),
+    r('Crêpes salées',V,'Farine, œufs, lait, garniture (jambon, fromage, œuf)','Préparer la pâte. Cuire les crêpes. Garnir et replier.'),
+    r('Galettes de sarrasin',V,'Farine de sarrasin, eau, sel, œuf, fromage','Préparer la pâte, reposer 1h. Cuire les galettes. Garnir d\'œuf et fromage.'),
+    r('Boeuf bourguignon',N,'Bœuf, vin rouge, carotte, oignon, lardons, champignons, bouquet garni','Saisir la viande. Ajouter légumes et vin. Mijoter 2h30 à feu doux. Servir avec pommes de terre.'),
+    r('Rôti de porc',N,'Rôti de porc, ail, thym, moutarde, pommes de terre','Badigeonner de moutarde. Cuire 1h à 180°C avec les pommes de terre. Laisser reposer avant de trancher.'),
+    r('Poêlée de légumes',V,'Courgette, poivron, oignon, champignons, huile d\'olive, herbes','Couper les légumes. Sauter à feu vif 15 min. Assaisonner et servir.'),
+    r('Riz cantonais',N,'Riz, œufs, jambon, petits pois, oignon, sauce soja','Cuire le riz. Faire une omelette, couper en lamelles. Sauter le tout avec sauce soja.'),
+    r('Gratin de chou-fleur',V,'Chou-fleur, béchamel, fromage râpé, muscade','Cuire le chou-fleur. Napper de béchamel et fromage. Gratiner 20 min à 200°C.'),
+    r('Parmentier de poisson',N,'Poisson blanc, pommes de terre, crème, beurre, fromage','Faire une purée. Émietter le poisson cuit. Alterner poisson et purée. Gratiner 20 min.'),
+    r('Wok de nouilles',V,'Nouilles, légumes variés, sauce soja, gingembre, ail, huile de sésame','Cuire les nouilles. Sauter les légumes au wok. Ajouter nouilles et sauce. Sauter 3 min.'),
+    r('Frittata',V,'Œufs, pommes de terre, oignon, épinards, fromage','Battre les œufs. Cuire pommes de terre et oignon. Verser les œufs, ajouter épinards et fromage. Cuire au four 15 min.'),
+    r('Salade composée',V,'Salade, tomate, maïs, œuf dur, thon ou feta, vinaigrette','Couper tous les ingrédients. Mélanger. Assaisonner de vinaigrette.'),
+    r('Croquettes de pomme de terre',V,'Pommes de terre, œuf, chapelure, farine, muscade','Faire une purée. Former des croquettes, paner. Frire ou cuire au four jusqu\'à doré.'),
+    r('Boulettes sauce tomate',N,'Bœuf haché, chapelure, œuf, oignon, coulis de tomate, basilic','Former les boulettes. Dorer à la poêle. Mijoter dans le coulis 20 min. Servir avec pâtes.'),
+    r('Endives au jambon',N,'Endives, jambon, béchamel, fromage râpé','Cuire les endives. Rouler dans le jambon. Napper de béchamel et fromage. Gratiner 25 min.'),
+    r('Chakchouka',V,'Œufs, poivron, tomate, oignon, ail, cumin, paprika','Revenir poivron, oignon, ail. Ajouter tomates et épices. Casser les œufs dessus. Cuire à couvert.'),
+    r('Gnocchis poêlés',V,'Gnocchis, beurre, sauge, parmesan','Poêler les gnocchis au beurre jusqu\'à doré. Ajouter la sauge. Parsemer de parmesan.'),
+    r('Cordon bleu & purée',N,'Cordons bleus, pommes de terre, lait, beurre','Cuire les cordons bleus. Préparer une purée maison. Servir ensemble.'),
+    r('Soupe de poisson',N,'Poissons de roche, tomate, fenouil, oignon, ail, safran, croûtons','Cuire les poissons avec légumes et safran. Mixer et filtrer. Servir avec croûtons et rouille.'),
+    r('Œufs cocotte',V,'Œufs, crème, épinards, fromage, muscade','Beurrer des ramequins. Ajouter épinards, crème, un œuf. Cuire au bain-marie 12 min.'),
+    r('Polenta crémeuse',V,'Polenta, bouillon, parmesan, beurre, champignons','Cuire la polenta dans le bouillon. Ajouter parmesan et beurre. Servir avec champignons poêlés.'),
+    r('Salade de lentilles',V,'Lentilles, échalote, carotte, persil, vinaigrette moutarde','Cuire les lentilles. Mélanger avec échalote, carotte et persil. Assaisonner.')
+  ];
+}
+
+function addBaseRecipes(){
+  if(!Array.isArray(data.recipes)) data.recipes=[];
+  const existing=new Set(data.recipes.map(r=>r.name.toLowerCase()));
+  let added=0;
+  recipeBank().forEach(b=>{
+    if(!existing.has(b.name.toLowerCase())){
+      data.recipes.push({id:uid(),name:b.name,veg:b.veg,ingredients:b.ingredients,steps:b.steps});
+      added++;
+    }
+  });
+  saveData(); renderMeals();
+  toast(added?`${added} recettes ajoutées 🍽️`:'Recettes déjà présentes','success');
 }
 
 function addRecipe(){
