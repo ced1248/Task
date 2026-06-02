@@ -393,7 +393,9 @@ header{
 .today-empty{font-size:12px;color:var(--text3);padding:4px 0;}
 
 /* Bande "Ma semaine" */
-.week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;}
+.week-strip{display:grid;gap:5px;}
+.week-5{grid-template-columns:repeat(5,minmax(0,1fr));}
+.week-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .wk-col{
   background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);
   padding:6px 4px;min-height:64px;cursor:pointer;display:flex;flex-direction:column;gap:3px;
@@ -568,6 +570,16 @@ header{
   padding:0 7px;font-size:13px;cursor:pointer;color:var(--text2);
 }
 .meal-pick:hover{background:var(--accent);color:white;}
+.meal-pick-select{
+  background:var(--accent-l);border:1px solid var(--border);border-radius:var(--r2);
+  padding:0 4px;font-size:13px;cursor:pointer;color:var(--text2);
+  max-width:38px;flex:0 0 auto;
+}
+.meal-pick-select:focus{border-color:var(--accent);outline:none;}
+.today-meals{display:flex;flex-direction:column;gap:6px;}
+.today-meal-row{display:flex;align-items:center;gap:12px;}
+.tm-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;width:42px;flex:0 0 auto;}
+.tm-val{font-size:14px;color:var(--text);}
 .cal-cell .day-num{font-size:11px;font-weight:600;margin-bottom:4px;}
 .cal-event{
   font-size:10px;padding:1px 5px;border-radius:3px;
@@ -2195,13 +2207,23 @@ function renderToday(){
   } else html+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
   html+=`</div>`;
 
-  // ─── Ma semaine (lun → dim de la semaine en cours) ───
+  // ─── Repas du jour ───
+  const todayMeal=(data.meals&&data.meals[todayStr()])||{};
+  if(todayMeal.midi || todayMeal.soir){
+    let mealHTML=`<div class="today-block"><div class="today-head">🍽️ Repas du jour</div><div class="today-meals">`;
+    if(todayMeal.midi) mealHTML+=`<div class="today-meal-row"><span class="tm-label">Midi</span><span class="tm-val">${esc(todayMeal.midi)}</span></div>`;
+    if(todayMeal.soir) mealHTML+=`<div class="today-meal-row"><span class="tm-label">Soir</span><span class="tm-val">${esc(todayMeal.soir)}</span></div>`;
+    mealHTML+=`</div></div>`;
+    html+=mealHTML;
+  }
+
+  // ─── Ma semaine (lun → ven en haut, week-end en dessous) ───
   const now=new Date(); now.setHours(0,0,0,0);
   const monday=new Date(now);
   monday.setDate(now.getDate()-((now.getDay()+6)%7));  // lundi
   const jours=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-  let weekHTML=`<div class="today-block"><div class="today-head">🗓️ Ma semaine</div><div class="week-strip">`;
-  for(let i=0;i<7;i++){
+
+  const wkCol=(i)=>{
     const cur=new Date(monday); cur.setDate(monday.getDate()+i);
     const ds=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
     const marks=(data.dayMarks&&data.dayMarks[ds])||{};
@@ -2221,9 +2243,17 @@ function renderToday(){
     const wkExtra=(evs.length>2?evs.length-2:0)+(dayTk.length>2?dayTk.length-2:0);
     if(wkExtra>0) inner+=`<div style="font-size:9px;color:var(--text3);">+${wkExtra}</div>`;
     if(!Object.keys(marks).length && !evs.length && !dayTk.length && !ferie) inner+=`<div class="wk-empty">—</div>`;
-    weekHTML+=`<div class="wk-col${isToday?' wk-today':''}" onclick="showSection('calendar', document.getElementById('nav-calendar')); openDay('${ds}')">${inner}</div>`;
-  }
-  weekHTML+=`</div></div>`;
+    return `<div class="wk-col${isToday?' wk-today':''}" onclick="showSection('calendar', document.getElementById('nav-calendar')); openDay('${ds}')">${inner}</div>`;
+  };
+
+  let weekHTML=`<div class="today-block"><div class="today-head">🗓️ Ma semaine</div>`;
+  weekHTML+=`<div class="week-strip week-5">`;
+  for(let i=0;i<5;i++) weekHTML+=wkCol(i);
+  weekHTML+=`</div>`;
+  weekHTML+=`<div class="week-strip week-2" style="margin-top:6px;">`;
+  for(let i=5;i<7;i++) weekHTML+=wkCol(i);
+  weekHTML+=`</div>`;
+  weekHTML+=`</div>`;
   html+=weekHTML;
 
   box.innerHTML=html;
@@ -2422,12 +2452,19 @@ function renderMeals(){
     const cur=new Date(monday); cur.setDate(monday.getDate()+i);
     const ds=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
     const m=data.meals[ds]||{};
+    const recipeMenu=(key)=>{
+      if(!data.recipes||!data.recipes.length) return '';
+      return `<select class="meal-pick-select" onchange="if(this.value){setMeal('${ds}','${key}',this.value);renderMeals();}this.selectedIndex=0;" title="Choisir une recette">
+        <option value="">📖</option>
+        ${data.recipes.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('')}
+      </select>`;
+    };
     const slot=(key,lbl)=>`
       <div class="meal-slot">
         <span class="meal-slot-label">${lbl}</span>
         <div class="meal-input-row">
           <input class="meal-input" value="${esc(m[key]||'')}" placeholder="—" onchange="setMeal('${ds}','${key}',this.value)">
-          ${(data.recipes&&data.recipes.length)?`<button class="meal-pick" onclick="pickRecipe('${ds}','${key}')" title="Choisir une recette">📖</button>`:''}
+          ${recipeMenu(key)}
         </div>
       </div>`;
     return `<div class="meal-day${ds===today?' is-today':''}">
@@ -2456,20 +2493,6 @@ function setMeal(ds,key,val){
   if(val) data.meals[ds][key]=val;
   else { delete data.meals[ds][key]; if(!Object.keys(data.meals[ds]).length) delete data.meals[ds]; }
   saveData();
-}
-
-function pickRecipe(ds,key){
-  const recipes=data.recipes||[];
-  if(!recipes.length) return;
-  // petit menu : on réutilise confirmAction-like via prompt natif simple
-  const choice=window.prompt('Recette ?\n\n'+recipes.map((r,i)=>`${i+1}. ${r}`).join('\n')+'\n\nTapez le numéro :');
-  if(!choice) return;
-  const idx=parseInt(choice,10)-1;
-  if(idx>=0 && idx<recipes.length){
-    if(!data.meals[ds]) data.meals[ds]={};
-    data.meals[ds][key]=recipes[idx];
-    saveData(); renderMeals();
-  }
 }
 
 function addRecipe(){
