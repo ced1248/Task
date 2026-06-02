@@ -582,6 +582,11 @@ header{
   max-width:38px;flex:0 0 auto;
 }
 .meal-pick-select:focus{border-color:var(--accent);outline:none;}
+.meal-die{
+  background:var(--accent-l);border:1px solid var(--border);border-radius:var(--r2);
+  padding:0 8px;font-size:14px;cursor:pointer;flex:0 0 auto;
+}
+.meal-die:hover{background:var(--accent);}
 .today-meals{display:flex;flex-direction:column;gap:6px;}
 .today-meal-row{display:flex;align-items:center;gap:12px;}
 .tm-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;width:42px;flex:0 0 auto;}
@@ -977,6 +982,7 @@ header{
     <div class="section hidden" id="s-meals">
       <div class="toolbar">
         <div class="toolbar-title">Repas de la semaine</div>
+        <button class="btn btn-secondary btn-sm" onclick="fillMealsRandom()">🎲 Au hasard</button>
         <button class="btn btn-secondary btn-sm" onclick="clearMeals()">Vider la semaine</button>
       </div>
       <div id="meals-grid" class="meals-grid"></div>
@@ -1239,6 +1245,33 @@ header{
   </div>
 </div>
 
+<!-- ════ MODAL: FICHE RECETTE ════ -->
+<div class="overlay" id="modal-recipe">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Fiche recette</span>
+      <button class="modal-close" onclick="closeModal('modal-recipe')">✕</button>
+    </div>
+    <input type="hidden" id="recipe-id">
+    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Nom *</label><input type="text" id="recipe-name" placeholder="Ex : Tartiflette"></div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="recipe-veg" style="width:auto;"> 🌱 Végétarien
+      </label>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Ingrédients</label>
+      <textarea id="recipe-ingredients" rows="4" placeholder="Un ingrédient par ligne, ou séparés par des virgules…"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Préparation</label>
+      <textarea id="recipe-steps" rows="6" placeholder="Les étapes de la recette…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-recipe')">Fermer</button>
+      <button class="btn btn-primary" onclick="saveRecipe()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ MODAL: DAY EVENTS ════ -->
 <div class="overlay" id="modal-day">
   <div class="modal">
@@ -1307,7 +1340,18 @@ function defaultData() {
     dayMarks:{},
     vacances:[],
     meals:{},
-    recipes:[],
+    recipes:[
+      {id:'rc1',name:'Spaghetti bolognaise',veg:false,ingredients:'Spaghetti, bœuf haché, coulis de tomate, oignon, ail, carotte, huile d\'olive, sel, poivre, herbes de Provence',steps:'Faire revenir l\'oignon et l\'ail. Ajouter la viande, faire dorer. Ajouter carotte râpée et coulis. Laisser mijoter 30 min. Cuire les pâtes, servir.'},
+      {id:'rc2',name:'Poulet rôti & pommes de terre',veg:false,ingredients:'Poulet fermier, pommes de terre, beurre, thym, ail, sel, poivre',steps:'Préchauffer à 200°C. Badigeonner le poulet de beurre, saler. Disposer les pommes de terre autour. Cuire 1h15 en arrosant régulièrement.'},
+      {id:'rc3',name:'Quiche lorraine',veg:false,ingredients:'Pâte brisée, lardons, 3 œufs, 20cl crème, 20cl lait, muscade, poivre',steps:'Étaler la pâte. Faire revenir les lardons. Battre œufs, crème, lait, muscade. Verser sur les lardons. Cuire 35 min à 180°C.'},
+      {id:'rc4',name:'Gratin dauphinois',veg:true,ingredients:'Pommes de terre, 50cl crème, 25cl lait, ail, beurre, muscade, sel, poivre',steps:'Émincer les pommes de terre. Frotter le plat d\'ail, beurrer. Disposer en couches, couvrir de crème et lait. Cuire 1h à 160°C.'},
+      {id:'rc5',name:'Curry de légumes',veg:true,ingredients:'Courgette, carotte, pois chiches, lait de coco, oignon, ail, curry, riz',steps:'Faire revenir oignon et ail. Ajouter les légumes en dés et le curry. Verser le lait de coco et les pois chiches. Mijoter 25 min. Servir avec du riz.'},
+      {id:'rc6',name:'Risotto aux champignons',veg:true,ingredients:'Riz arborio, champignons, oignon, vin blanc, bouillon, parmesan, beurre',steps:'Faire revenir oignon et champignons. Ajouter le riz, nacrer. Déglacer au vin. Ajouter le bouillon louche par louche. Finir avec parmesan et beurre.'},
+      {id:'rc7',name:'Omelette aux herbes',veg:true,ingredients:'6 œufs, persil, ciboulette, beurre, sel, poivre',steps:'Battre les œufs avec les herbes ciselées. Faire fondre le beurre, verser. Cuire à feu doux, plier et servir.'},
+      {id:'rc8',name:'Soupe de légumes',veg:true,ingredients:'Poireau, carotte, pomme de terre, oignon, bouillon, sel, poivre',steps:'Éplucher et couper les légumes. Couvrir d\'eau et bouillon. Cuire 30 min. Mixer, assaisonner.'},
+      {id:'rc9',name:'Chili sin carne',veg:true,ingredients:'Haricots rouges, maïs, tomates, poivron, oignon, ail, cumin, paprika, riz',steps:'Faire revenir oignon, ail, poivron. Ajouter épices, tomates, haricots et maïs. Mijoter 25 min. Servir avec du riz.'},
+      {id:'rc10',name:'Tartiflette',veg:false,ingredients:'Pommes de terre, reblochon, lardons, oignon, vin blanc, crème',steps:'Cuire les pommes de terre. Faire revenir lardons et oignon. Mélanger, ajouter un peu de crème. Couvrir de reblochon. Gratiner 20 min à 200°C.'}
+    ],
     recurDone:{}
   };
 }
@@ -1348,6 +1392,8 @@ function loadData() {
       if(!Array.isArray(parsed.vacances)) parsed.vacances = [];
       if(typeof parsed.meals!=='object'||!parsed.meals) parsed.meals = {};
       if(!Array.isArray(parsed.recipes)) parsed.recipes = [];
+      parsed.recipes = parsed.recipes.map(r=> typeof r==='string'
+        ? {id:uid(),name:r,veg:false,ingredients:'',steps:''} : r);
       // migration : ancien "workdays" (Sandra=p2) → dayMarks
       if(parsed.workdays && parsed.workdays.length){
         parsed.workdays.forEach(ds=>{
@@ -1409,6 +1455,8 @@ async function pullRemote(showToast=false){
         if(!Array.isArray(data.vacances)) data.vacances = [];
         if(typeof data.meals!=='object'||!data.meals) data.meals = {};
         if(!Array.isArray(data.recipes)) data.recipes = [];
+        data.recipes = data.recipes.map(r=> typeof r==='string'
+          ? {id:uid(),name:r,veg:false,ingredients:'',steps:''} : r);
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -2465,7 +2513,7 @@ function renderMeals(){
       if(!data.recipes||!data.recipes.length) return '';
       return `<select class="meal-pick-select" onchange="if(this.value){setMeal('${ds}','${key}',this.value);renderMeals();}this.selectedIndex=0;" title="Choisir une recette">
         <option value="">📖</option>
-        ${data.recipes.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('')}
+        ${data.recipes.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('')}
       </select>`;
     };
     const slot=(key,lbl)=>`
@@ -2474,6 +2522,7 @@ function renderMeals(){
         <div class="meal-field">
           <input class="meal-input" value="${esc(m[key]||'')}" placeholder="Ajouter un plat…" onchange="setMeal('${ds}','${key}',this.value)">
           ${recipeMenu(key)}
+          ${(data.recipes&&data.recipes.length)?`<button class="meal-die" onclick="randomMeal('${ds}','${key}')" title="Plat au hasard">🎲</button>`:''}
         </div>
       </div>`;
     return `<div class="meal-day${ds===today?' is-today':''}">
@@ -2482,14 +2531,15 @@ function renderMeals(){
     </div>`;
   }).join('');
 
-  // liste des recettes
+  // liste des recettes (cliquables pour ouvrir la fiche)
   const rl=document.getElementById('recipes-list');
   if(rl){
     rl.innerHTML=(data.recipes||[]).length
       ? data.recipes.map(r=>`
         <div class="settings-row">
-          <span style="flex:1;">${esc(r)}</span>
-          <button class="btn-icon" onclick="deleteRecipe('${esc(r).replace(/'/g,"\\'")}')">🗑</button>
+          <span style="flex:1;cursor:pointer;" onclick="openRecipe('${r.id}')">${r.veg?'🌱 ':''}${esc(r.name)}</span>
+          <button class="btn-icon" onclick="openRecipe('${r.id}')" title="Voir / modifier">✏️</button>
+          <button class="btn-icon" onclick="deleteRecipe('${r.id}')" title="Supprimer">🗑</button>
         </div>`).join('')
       : '<div style="font-size:12px;color:var(--text3);">Aucune recette. Ajoutez vos plats habituels ci-dessous.</div>';
   }
@@ -2509,15 +2559,47 @@ function addRecipe(){
   const v=inp.value.trim();
   if(!v) return;
   if(!Array.isArray(data.recipes)) data.recipes=[];
-  if(data.recipes.includes(v)){ toast('Recette déjà dans la liste.'); inp.value=''; return; }
-  data.recipes.push(v);
+  if(data.recipes.some(r=>r.name.toLowerCase()===v.toLowerCase())){ toast('Recette déjà dans la liste.'); inp.value=''; return; }
+  const r={id:uid(),name:v,veg:false,ingredients:'',steps:''};
+  data.recipes.push(r);
   inp.value='';
   saveData(); renderMeals();
+  openRecipe(r.id);   // ouvre directement la fiche pour la compléter
 }
 
-function deleteRecipe(name){
-  data.recipes=(data.recipes||[]).filter(r=>r!==name);
-  saveData(); renderMeals();
+function deleteRecipe(id){
+  const r=(data.recipes||[]).find(x=>x.id===id);
+  confirmAction(`Supprimer la recette ${r?'"'+r.name+'"':''} ?`,()=>{
+    data.recipes=(data.recipes||[]).filter(x=>x.id!==id);
+    saveData(); renderMeals();
+    toast('Recette supprimée');
+  });
+}
+
+// Fiche recette (modal)
+function openRecipe(id){
+  const r=(data.recipes||[]).find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('recipe-id').value=r.id;
+  document.getElementById('recipe-name').value=r.name;
+  document.getElementById('recipe-veg').checked=!!r.veg;
+  document.getElementById('recipe-ingredients').value=r.ingredients||'';
+  document.getElementById('recipe-steps').value=r.steps||'';
+  openModal('modal-recipe');
+}
+
+function saveRecipe(){
+  const id=document.getElementById('recipe-id').value;
+  const r=(data.recipes||[]).find(x=>x.id===id);
+  if(!r) return;
+  const name=document.getElementById('recipe-name').value.trim();
+  if(!name){ toast('Le nom est obligatoire.','error'); return; }
+  r.name=name;
+  r.veg=document.getElementById('recipe-veg').checked;
+  r.ingredients=document.getElementById('recipe-ingredients').value.trim();
+  r.steps=document.getElementById('recipe-steps').value.trim();
+  saveData(); renderMeals(); closeModal('modal-recipe');
+  toast('Recette enregistrée ✓','success');
 }
 
 function clearMeals(){
@@ -2527,6 +2609,59 @@ function clearMeals(){
     saveData(); renderMeals();
     toast('Semaine vidée');
   });
+}
+
+// Liste des dates de la semaine courante (lundi → dimanche)
+function currentWeekDates(){
+  const now=new Date();
+  const monday=new Date(now); monday.setDate(now.getDate()-((now.getDay()+6)%7));
+  const out=[];
+  for(let i=0;i<7;i++){
+    const c=new Date(monday); c.setDate(monday.getDate()+i);
+    out.push(`${c.getFullYear()}-${String(c.getMonth()+1).padStart(2,'0')}-${String(c.getDate()).padStart(2,'0')}`);
+  }
+  return out;
+}
+
+// Pioche un plat au hasard pour une case (évite si possible un plat déjà présent cette semaine)
+function randomMeal(ds,key){
+  const names=(data.recipes||[]).map(r=>r.name);
+  if(!names.length){ toast('Ajoutez d\'abord des recettes.'); return; }
+  const used=new Set();
+  currentWeekDates().forEach(d=>{
+    const m=data.meals[d]||{};
+    if(m.midi) used.add(m.midi);
+    if(m.soir) used.add(m.soir);
+  });
+  let pool=names.filter(n=>!used.has(n));
+  if(!pool.length) pool=names;
+  const pick=pool[Math.floor(Math.random()*pool.length)];
+  if(!data.meals[ds]) data.meals[ds]={};
+  data.meals[ds][key]=pick;
+  saveData(); renderMeals();
+}
+
+// Remplit toutes les cases VIDES de la semaine au hasard, sans répéter tant que possible
+function fillMealsRandom(){
+  const names=(data.recipes||[]).map(r=>r.name);
+  if(!names.length){ toast('Ajoutez d\'abord des recettes.'); return; }
+  const dates=currentWeekDates();
+  let pool=[...names];
+  const draw=()=>{
+    if(!pool.length) pool=[...names];
+    const idx=Math.floor(Math.random()*pool.length);
+    return pool.splice(idx,1)[0];
+  };
+  let filled=0;
+  dates.forEach(ds=>{
+    if(!data.meals[ds]) data.meals[ds]={};
+    ['midi','soir'].forEach(key=>{
+      if(!data.meals[ds][key]){ data.meals[ds][key]=draw(); filled++; }
+    });
+  });
+  if(!filled){ toast('Toutes les cases sont déjà remplies.'); return; }
+  saveData(); renderMeals();
+  toast(`${filled} repas ajoutés 🎲`,'success');
 }
 
 // ══════════════════════════════════════════════════════
