@@ -378,6 +378,30 @@ header{
 .course-check:hover{border-color:var(--done);transform:scale(1.08);}
 .course-check.on{background:var(--done);border-color:var(--done);}
 
+/* Achats : carte avec ligne principale + sélecteur projet */
+.achat-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r2);padding:12px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 1px 4px rgba(90,100,75,.04);transition:box-shadow .2s,opacity .2s;
+}
+.achat-item:hover{box-shadow:var(--shadow);}
+.achat-item.checked{opacity:.5;}
+.achat-item.checked .course-name{text-decoration:line-through;color:var(--text3);}
+.achat-main{display:flex;align-items:center;gap:13px;}
+.achat-proj{
+  align-self:flex-start;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);
+  padding:4px 8px;font-family:'Syne',sans-serif;font-size:11px;color:var(--text2);
+  outline:none;cursor:pointer;max-width:100%;
+}
+.achat-proj:focus{border-color:var(--accent);}
+.proj-budget{
+  font-size:12px;color:var(--text2);background:var(--accent-l);
+  padding:7px 11px;border-radius:var(--r2);margin-bottom:10px;
+}
+.proj-budget strong{color:#4a5536;}
+
 /* ── RECURRENCES ──────────────────────────────────────── */
 .recur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
 .recur-card{
@@ -670,6 +694,7 @@ header{
       <input type="text" id="global-search" placeholder="Rechercher…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape')this.value='',onSearch('')">
     </div>
     <button class="btn-h" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
+    <button class="btn-h" onclick="showSection('achats', document.getElementById('nav-achats'))">🛍️ Achats</button>
     <button class="btn-h primary" onclick="openNewTask()" data-tip="N">+ Tâche</button>
     <button class="btn-h" id="btn-settings" onclick="showSection('settings', document.getElementById('nav-settings'))" data-tip="Réglages" aria-label="Réglages">⚙️</button>
   </div>
@@ -694,6 +719,9 @@ header{
       </div>
       <div class="nav-item" id="nav-courses" onclick="showSection('courses',this)">
         <span>🛒</span> Courses <span class="badge green" id="nb-courses">0</span>
+      </div>
+      <div class="nav-item" id="nav-achats" onclick="showSection('achats',this)">
+        <span>🛍️</span> Achats <span class="badge blue" id="nb-achats">0</span>
       </div>
       <div class="nav-item" id="nav-calendar" onclick="showSection('calendar',this)">
         <span>📅</span> Calendrier
@@ -797,6 +825,20 @@ header{
         <button class="btn btn-primary" onclick="addCourse()">Ajouter</button>
       </div>
       <div class="courses-list" id="courses-list"></div>
+    </div>
+
+    <!-- ═══ SECTION: ACHATS ═══ -->
+    <div class="section hidden" id="s-achats">
+      <div class="toolbar">
+        <div class="toolbar-title">Achats <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:400;color:var(--text2);" id="achats-total-label"></span></div>
+        <button class="btn btn-secondary btn-sm" id="btn-clear-achats" onclick="clearBoughtAchats()">Effacer les achetés</button>
+      </div>
+      <div class="course-add">
+        <input class="inp" type="text" id="new-achat-name" placeholder="Quoi ? (ex. Lave-linge)" onkeydown="if(event.key==='Enter')document.getElementById('new-achat-price').focus()">
+        <input class="inp" type="number" id="new-achat-price" placeholder="€ (optionnel)" style="flex:0 0 110px;" onkeydown="if(event.key==='Enter')addAchat()">
+        <button class="btn btn-primary" onclick="addAchat()">Ajouter</button>
+      </div>
+      <div class="courses-list" id="achats-list"></div>
     </div>
 
     <!-- ═══ SECTION: STATS ═══ -->
@@ -1073,6 +1115,7 @@ function defaultData() {
       {id:'pr2',name:'Jardin syntropic',icon:'🌿',color:'#5e8c52'}
     ],
     courses:[],
+    achats:[],
     events:[],
     workdays:[],
     recurDone:{}
@@ -1108,6 +1151,7 @@ function loadData() {
     if (d){
       const parsed = JSON.parse(d);
       if(!Array.isArray(parsed.courses)) parsed.courses = [];
+      if(!Array.isArray(parsed.achats)) parsed.achats = [];
       if(!Array.isArray(parsed.events)) parsed.events = [];
       if(!Array.isArray(parsed.workdays)) parsed.workdays = [];
       return parsed;
@@ -1156,6 +1200,7 @@ async function pullRemote(showToast=false){
       if (remoteT > localT){
         data = remote;
         if(!Array.isArray(data.courses)) data.courses = [];
+        if(!Array.isArray(data.achats)) data.achats = [];
         if(!Array.isArray(data.events)) data.events = [];
         if(!Array.isArray(data.workdays)) data.workdays = [];
         localStorage.setItem(LS_KEY, JSON.stringify(data));
@@ -1275,6 +1320,7 @@ function showSection(id, btn, isMob=false){
   if(id==='calendar') renderCalendar();
   if(id==='stats') renderStats();
   if(id==='today') renderToday();
+  if(id==='achats') renderAchats();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1323,6 +1369,7 @@ function render(){
   renderRecurs();
   renderProjects();
   renderCourses();
+  renderAchats();
   renderSettings();
   updateNavBadges();
 }
@@ -1363,6 +1410,10 @@ function updateNavBadges(){
   const nc = (data.courses||[]).filter(c=>!c.done).length;
   const cb = document.getElementById('nb-courses');
   if(cb) cb.textContent = nc;
+  // achats : nombre non achetés
+  const na = (data.achats||[]).filter(a=>!a.done).length;
+  const ab = document.getElementById('nb-achats');
+  if(ab) ab.textContent = na;
 }
 
 // ══════════════════════════════════════════════════════
@@ -1736,10 +1787,20 @@ function saveProject(){
 }
 
 function deleteProject(id){
-  confirmAction('Supprimer ce projet ? Les tâches associées resteront.',()=>{
+  confirmAction('Supprimer ce projet ? Les tâches et achats associés resteront.',()=>{
     data.projects=data.projects.filter(p=>p.id!==id);
     data.tasks.forEach(t=>{ if(t.project===id) t.project=''; });
+    (data.achats||[]).forEach(a=>{ if(a.project===id) a.project=''; });
     saveData(); render(); toast('Projet supprimé');
+  });
+}
+
+function removeFromProject(taskId){
+  const t=data.tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  confirmAction('Retirer cette tâche du projet ? (la tâche est conservée)',()=>{
+    t.project='';
+    saveData(); render(); toast('Tâche retirée du projet');
   });
 }
 
@@ -1753,6 +1814,10 @@ function renderProjects(){
     const tasks=data.tasks.filter(t=>t.project===p.id);
     const done=tasks.filter(t=>t.done).length;
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
+    // achats liés à ce projet
+    const projAchats=(data.achats||[]).filter(a=>a.project===p.id);
+    const budgetTotal=projAchats.reduce((s,a)=>s+(Number(a.price)||0),0);
+    const achatDone=projAchats.filter(a=>a.done).length;
     return `<div class="proj-card">
       <div class="proj-header" style="border-bottom:3px solid ${p.color};">
         <span class="proj-ico">${p.icon}</span>
@@ -1760,6 +1825,7 @@ function renderProjects(){
         <button class="btn-icon" style="margin-left:auto;" onclick="deleteProject('${p.id}')">🗑</button>
       </div>
       <div class="proj-body">
+        ${projAchats.length?`<div class="proj-budget">💰 Budget : <strong>${fmtEuro(budgetTotal)}</strong> · ${achatDone}/${projAchats.length} acheté${achatDone>1?'s':''}</div>`:''}
         ${tasks.length?`
           <div class="proj-progress">
             <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${p.color};"></div></div>
@@ -1767,10 +1833,12 @@ function renderProjects(){
           </div>
           <ul class="proj-tasks">
             ${tasks.slice(0,6).map(t=>`
-              <li class="proj-task-row" onclick="toggleTask('${t.id}')">
-                <div class="mini-check${t.done?' done':''}">${t.done?'✓':''}</div>
-                <span style="${t.done?'text-decoration:line-through;color:var(--text3);':''}">${esc(t.title)}</span>
-                ${t.deadline?`<span class="tag tag-deadline" style="margin-left:auto;font-size:10px;">📅 ${fmtDate(t.deadline)}</span>`:''}
+              <li class="proj-task-row">
+                <div class="mini-check${t.done?' done':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
+                <span style="flex:1;${t.done?'text-decoration:line-through;color:var(--text3);':''}" onclick="toggleTask('${t.id}')">${esc(t.title)}</span>
+                ${t.deadline?`<span class="tag tag-deadline" style="font-size:10px;">📅 ${fmtDate(t.deadline)}</span>`:''}
+                <button class="btn-icon" style="padding:2px 4px;" onclick="event.stopPropagation();editTask('${t.id}')" data-tip="Modifier">✏️</button>
+                <button class="btn-icon" style="padding:2px 4px;" onclick="event.stopPropagation();removeFromProject('${t.id}')" data-tip="Retirer du projet">✕</button>
               </li>`).join('')}
             ${tasks.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${tasks.length-6} autres…</li>`:''}
           </ul>`:'<div style="font-size:12px;color:var(--text3);">Aucune tâche.</div>'}
@@ -1923,6 +1991,87 @@ function clearCheckedCourses(){
     data.courses=(data.courses||[]).filter(c=>!c.done);
     saveData(); renderCourses(); updateNavBadges();
     toast('Articles cochés retirés');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  ACHATS
+// ══════════════════════════════════════════════════════
+function fmtEuro(n){
+  if(n==null||n==='') return '';
+  return Number(n).toLocaleString('fr-FR',{maximumFractionDigits:0})+' €';
+}
+
+function renderAchats(){
+  const list=document.getElementById('achats-list');
+  if(!list) return;
+  const items=data.achats||[];
+  const reste=items.filter(a=>!a.done);
+  const totalReste=reste.reduce((s,a)=>s+(Number(a.price)||0),0);
+
+  const lbl=document.getElementById('achats-total-label');
+  if(lbl) lbl.textContent = items.length ? `— ${reste.length} à acheter · ${fmtEuro(totalReste)}` : '';
+  const clr=document.getElementById('btn-clear-achats');
+  if(clr) clr.style.display = items.some(a=>a.done) ? '' : 'none';
+
+  if(!items.length){
+    list.innerHTML='<div class="empty"><div class="ico">🛍️</div><div class="msg">Aucun achat prévu. Ajoutez une idée ci-dessus.</div></div>';
+    return;
+  }
+  const sorted=[...items].sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+  const projOpts=(sel)=>'<option value="">— Aucun projet —</option>'+
+    data.projects.map(p=>`<option value="${p.id}"${sel===p.id?' selected':''}>${p.icon} ${esc(p.name)}</option>`).join('');
+  list.innerHTML=sorted.map(a=>`
+    <div class="achat-item${a.done?' checked':''}">
+      <div class="achat-main">
+        <div class="course-check${a.done?' on':''}" onclick="toggleAchat('${a.id}')">${a.done?'✓':''}</div>
+        <span class="course-name" onclick="toggleAchat('${a.id}')">${esc(a.name)}</span>
+        ${a.price?`<span class="tag" style="background:var(--accent-l);color:#4a5536;font-weight:600;">${fmtEuro(a.price)}</span>`:''}
+        <button class="btn-icon" onclick="deleteAchat('${a.id}')" data-tip="Retirer">🗑</button>
+      </div>
+      <select class="achat-proj" onchange="setAchatProject('${a.id}',this.value)">${projOpts(a.project||'')}</select>
+    </div>`).join('');
+}
+
+function setAchatProject(id, pid){
+  const a=(data.achats||[]).find(x=>x.id===id);
+  if(!a) return;
+  a.project=pid;
+  saveData(); renderAchats(); renderProjects();
+}
+
+function addAchat(){
+  const ni=document.getElementById('new-achat-name');
+  const pi=document.getElementById('new-achat-price');
+  const name=ni.value.trim();
+  if(!name) return;
+  if(!Array.isArray(data.achats)) data.achats=[];
+  const price=pi.value.trim()===''?null:Number(pi.value);
+  data.achats.push({id:uid(),name,price,done:false});
+  ni.value=''; pi.value='';
+  saveData(); renderAchats(); updateNavBadges();
+  ni.focus();
+}
+
+function toggleAchat(id){
+  const a=(data.achats||[]).find(x=>x.id===id);
+  if(!a) return;
+  a.done=!a.done;
+  saveData(); renderAchats(); updateNavBadges();
+}
+
+function deleteAchat(id){
+  data.achats=(data.achats||[]).filter(a=>a.id!==id);
+  saveData(); renderAchats(); updateNavBadges();
+}
+
+function clearBoughtAchats(){
+  const n=(data.achats||[]).filter(a=>a.done).length;
+  if(!n) return;
+  confirmAction(`Retirer les ${n} achat(s) effectué(s) ?`,()=>{
+    data.achats=(data.achats||[]).filter(a=>!a.done);
+    saveData(); renderAchats(); updateNavBadges();
+    toast('Achats effectués retirés');
   });
 }
 
