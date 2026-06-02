@@ -1174,8 +1174,12 @@ header{
       <div class="form-group"><label class="form-label">Heure</label><input type="time" id="day-ev-time"></div>
       <div class="form-group"><label class="form-label">Rendez-vous</label><input type="text" id="day-ev-text" placeholder="Ex : Dentiste" onkeydown="if(event.key==='Enter')addEvent()"></div>
     </div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label class="form-label">Planifier une tâche existante ce jour</label>
+      <select id="day-task-select" class="inp" onchange="assignTaskToDay(this.value)"></select>
+    </div>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="addTaskForDay()">+ Tâche ce jour</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-day')">Fermer</button>
       <button class="btn btn-primary" onclick="addEvent()">+ Rendez-vous</button>
     </div>
   </div>
@@ -1222,17 +1226,7 @@ function defaultData() {
     events:[],
     workdays:[],
     dayMarks:{},
-    vacances:[
-      {id:'v1',name:'Toussaint',start:'2025-10-18',end:'2025-11-03'},
-      {id:'v2',name:'Noël',start:'2025-12-20',end:'2026-01-05'},
-      {id:'v3',name:'Hiver',start:'2026-02-21',end:'2026-03-09'},
-      {id:'v4',name:'Printemps',start:'2026-04-18',end:'2026-05-04'},
-      {id:'v5',name:'Été',start:'2026-07-04',end:'2026-09-01'},
-      {id:'v6',name:'Toussaint',start:'2026-10-17',end:'2026-11-02'},
-      {id:'v7',name:'Noël',start:'2026-12-19',end:'2027-01-04'},
-      {id:'v8',name:'Hiver',start:'2027-02-06',end:'2027-02-22'},
-      {id:'v9',name:'Printemps',start:'2027-04-03',end:'2027-04-19'}
-    ],
+    vacances:[],
     recurDone:{}
   };
 }
@@ -1270,7 +1264,7 @@ function loadData() {
       if(!Array.isArray(parsed.events)) parsed.events = [];
       if(!Array.isArray(parsed.workdays)) parsed.workdays = [];
       if(typeof parsed.dayMarks!=='object'||!parsed.dayMarks) parsed.dayMarks = {};
-      if(!Array.isArray(parsed.vacances)) parsed.vacances = defaultData().vacances;
+      if(!Array.isArray(parsed.vacances)) parsed.vacances = [];
       // migration : ancien "workdays" (Sandra=p2) → dayMarks
       if(parsed.workdays && parsed.workdays.length){
         parsed.workdays.forEach(ds=>{
@@ -1329,7 +1323,7 @@ async function pullRemote(showToast=false){
         if(!Array.isArray(data.events)) data.events = [];
         if(!Array.isArray(data.workdays)) data.workdays = [];
         if(typeof data.dayMarks!=='object'||!data.dayMarks) data.dayMarks = {};
-        if(!Array.isArray(data.vacances)) data.vacances = defaultData().vacances;
+        if(!Array.isArray(data.vacances)) data.vacances = [];
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -2422,6 +2416,7 @@ function openDay(ds){
   document.getElementById('day-ev-text').value='';
   document.getElementById('day-ev-time').value='';
   renderDayMarks();
+  renderDayTaskSelect();
   renderDayEvents();
   openModal('modal-day');
 }
@@ -2457,11 +2452,25 @@ function setDayMark(pid,type){
   saveData(); renderDayMarks(); renderCalendar(); renderToday();
 }
 
-function addTaskForDay(){
+function renderDayTaskSelect(){
+  const sel=document.getElementById('day-task-select');
+  if(!sel) return;
+  const todo=data.tasks.filter(t=>!t.done);
+  sel.innerHTML='<option value="">— Choisir une tâche… —</option>'+
+    todo.map(t=>`<option value="${t.id}">${esc(t.title)}${t.deadline?' (déjà le '+fmtDate(t.deadline)+')':''}</option>`).join('');
+}
+
+function assignTaskToDay(taskId){
+  if(!taskId) return;
   const ds=document.getElementById('day-date').value;
-  closeModal('modal-day');
-  openNewTask();
-  setTimeout(()=>{ const dl=document.getElementById('task-deadline'); if(dl) dl.value=ds; },60);
+  const t=data.tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  t.deadline=ds;
+  saveData(); render();
+  renderDayTaskSelect();
+  document.getElementById('day-task-select').value='';
+  renderDayEvents();
+  toast('Tâche planifiée ce jour ✓','success');
 }
 
 function renderDayEvents(){
@@ -2571,12 +2580,15 @@ function renderSettings(){
   if(vl){
     const fmtV=ds=>{ const d=new Date(ds+'T00:00:00'); return d.toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'2-digit'}); };
     const sorted=[...(data.vacances||[])].sort((a,b)=>a.start.localeCompare(b.start));
-    vl.innerHTML = sorted.length ? sorted.map(v=>`
+    vl.innerHTML = sorted.length ? (
+      sorted.map(v=>`
       <div class="vac-row">
         <span style="flex:1;font-weight:600;">${esc(v.name)}</span>
         <span style="color:var(--text2);font-size:12px;">${fmtV(v.start)} → ${fmtV(v.end)}</span>
         <button class="btn-icon" onclick="confirmAction('Supprimer cette période ?',()=>deleteVacance('${v.id}'))">🗑</button>
-      </div>`).join('') : '<div style="font-size:12px;color:var(--text3);">Aucune période enregistrée.</div>';
+      </div>`).join('')
+      + `<button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="confirmAction('Effacer toutes les périodes ?',clearAllVacances)">Tout effacer</button>`
+    ) : '<div style="font-size:12px;color:var(--text3);">Aucune période. Ajoutez-en ci-dessous.</div>';
   }
 }
 
@@ -2598,6 +2610,11 @@ function deleteVacance(id){
   data.vacances=(data.vacances||[]).filter(v=>v.id!==id);
   saveData(); renderSettings(); renderCalendar();
   toast('Période supprimée');
+}
+function clearAllVacances(){
+  data.vacances=[];
+  saveData(); renderSettings(); renderCalendar();
+  toast('Toutes les périodes effacées');
 }
 
 function addPerson(){
