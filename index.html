@@ -448,6 +448,7 @@ header{
   padding:7px 11px;border-radius:var(--r2);margin-bottom:10px;
 }
 .proj-budget strong{color:#4a5536;}
+.proj-achats-title{font-size:12px;font-weight:700;color:var(--text2);margin:14px 0 6px;}
 
 /* ── RECURRENCES ──────────────────────────────────────── */
 .recur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
@@ -817,6 +818,7 @@ header{
     <div class="section hidden" id="s-tasks">
       <div class="toolbar">
         <div class="toolbar-title">Tâches</div>
+        <button class="btn btn-primary btn-sm" onclick="openNewTask()">+ Tâche</button>
         <button class="btn btn-secondary btn-sm" id="btn-filters" onclick="toggleFilters()">⚙ Filtres</button>
         <select class="sort-select" id="sort-select" onchange="renderTasks()">
           <option value="smart">Tri intelligent</option>
@@ -879,6 +881,7 @@ header{
       <div class="toolbar">
         <div class="toolbar-title">Liste de courses <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:400;color:var(--text2);" id="courses-count-label"></span></div>
         <button class="btn btn-secondary btn-sm" id="btn-clear-checked" onclick="clearCheckedCourses()">Effacer les cochés</button>
+        <button class="btn btn-secondary btn-sm" id="btn-clear-all-courses" onclick="clearAllCourses()">Tout supprimer</button>
       </div>
       <div class="course-add">
         <input class="inp" type="text" id="new-course-item" placeholder="Ajouter un article…" onkeydown="if(event.key==='Enter')addCourse()">
@@ -897,6 +900,10 @@ header{
         <input class="inp" type="text" id="new-achat-name" placeholder="Quoi ? (ex. Lave-linge)" onkeydown="if(event.key==='Enter')document.getElementById('new-achat-price').focus()">
         <input class="inp" type="number" id="new-achat-price" placeholder="€ (optionnel)" style="flex:0 0 110px;" onkeydown="if(event.key==='Enter')addAchat()">
         <button class="btn btn-primary" onclick="addAchat()">Ajouter</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select class="inp" id="new-achat-project" style="width:auto;font-size:12px;padding:6px 10px;"></select>
+        <input class="inp" type="text" id="new-achat-note" placeholder="Détail (couleur, dimension…)" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px;" onkeydown="if(event.key==='Enter')addAchat()">
       </div>
       <div class="courses-list" id="achats-list"></div>
     </div>
@@ -1951,7 +1958,21 @@ function renderProjects(){
               </li>`).join('')}
             ${tasks.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${tasks.length-6} autres…</li>`:''}
           </ul>`:'<div style="font-size:12px;color:var(--text3);">Aucune tâche.</div>'}
-        <button class="btn btn-secondary btn-sm" style="margin-top:12px;width:100%;" onclick="openTaskForProject('${p.id}')">+ Ajouter une tâche</button>
+        ${projAchats.length?`
+          <div class="proj-achats-title">🛍️ Achats</div>
+          <ul class="proj-tasks">
+            ${projAchats.slice(0,6).map(a=>`
+              <li class="proj-task-row">
+                <div class="mini-check${a.done?' done':''}" onclick="toggleAchat('${a.id}');renderProjects()">${a.done?'✓':''}</div>
+                <span style="flex:1;${a.done?'text-decoration:line-through;color:var(--text3);':''}" onclick="toggleAchat('${a.id}');renderProjects()">${esc(a.name)}</span>
+                ${a.price?`<span class="tag" style="background:var(--accent-l);color:#4a5536;font-size:10px;font-weight:600;">${fmtEuro(a.price)}</span>`:''}
+              </li>`).join('')}
+            ${projAchats.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${projAchats.length-6} autres…</li>`:''}
+          </ul>`:''}
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openTaskForProject('${p.id}')">+ Tâche</button>
+          <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openAchatForProject('${p.id}')">+ Achat</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -2103,6 +2124,16 @@ function clearCheckedCourses(){
   });
 }
 
+function clearAllCourses(){
+  const n=(data.courses||[]).length;
+  if(!n) return;
+  confirmAction(`Supprimer TOUTE la liste de courses (${n} article(s)) ?`,()=>{
+    data.courses=[];
+    saveData(); renderCourses(); updateNavBadges();
+    toast('Liste de courses vidée');
+  });
+}
+
 // ══════════════════════════════════════════════════════
 //  ACHATS
 // ══════════════════════════════════════════════════════
@@ -2123,13 +2154,18 @@ function renderAchats(){
   const clr=document.getElementById('btn-clear-achats');
   if(clr) clr.style.display = items.some(a=>a.done) ? '' : 'none';
 
+  const projOpts=(sel)=>'<option value="">— Aucun projet —</option>'+
+    data.projects.map(p=>`<option value="${p.id}"${sel===p.id?' selected':''}>${p.icon} ${esc(p.name)}</option>`).join('');
+
+  // remplit le sélecteur de projet du formulaire d'ajout (conserve la valeur courante)
+  const addSel=document.getElementById('new-achat-project');
+  if(addSel){ const cur=addSel.value; addSel.innerHTML=projOpts(cur); if(cur) addSel.value=cur; }
+
   if(!items.length){
     list.innerHTML='<div class="empty"><div class="ico">🛍️</div><div class="msg">Aucun achat prévu. Ajoutez une idée ci-dessus.</div></div>';
     return;
   }
   const sorted=[...items].sort((a,b)=>(a.done?1:0)-(b.done?1:0));
-  const projOpts=(sel)=>'<option value="">— Aucun projet —</option>'+
-    data.projects.map(p=>`<option value="${p.id}"${sel===p.id?' selected':''}>${p.icon} ${esc(p.name)}</option>`).join('');
   list.innerHTML=sorted.map(a=>`
     <div class="achat-item${a.done?' checked':''}">
       <div class="achat-main">
@@ -2149,14 +2185,26 @@ function setAchatProject(id, pid){
   saveData(); renderAchats(); renderProjects();
 }
 
+// depuis une carte projet : bascule vers Achats avec le projet pré-sélectionné
+function openAchatForProject(pid){
+  showSection('achats', document.getElementById('nav-achats'));
+  setTimeout(()=>{
+    const sel=document.getElementById('new-achat-project');
+    if(sel) sel.value=pid;
+    const ni=document.getElementById('new-achat-name');
+    if(ni) ni.focus();
+  },60);
+}
+
 function addAchat(){
   const ni=document.getElementById('new-achat-name');
   const pi=document.getElementById('new-achat-price');
+  const proj=document.getElementById('new-achat-project');
   const name=ni.value.trim();
   if(!name) return;
   if(!Array.isArray(data.achats)) data.achats=[];
   const price=pi.value.trim()===''?null:Number(pi.value);
-  data.achats.push({id:uid(),name,price,done:false});
+  data.achats.push({id:uid(),name,price,done:false,project:proj?proj.value:''});
   ni.value=''; pi.value='';
   saveData(); renderAchats(); updateNavBadges();
   ni.focus();
