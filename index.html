@@ -404,6 +404,7 @@ header{
 .wk-pill{font-size:9px;padding:2px 4px;border-radius:4px;line-height:1.2;word-break:break-word;}
 .wk-sandra{background:#e6dcf0;color:#5a4080;font-weight:600;}
 .wk-rdv{background:var(--accent-l);color:#4a5536;font-weight:600;}
+.wk-task{background:var(--bg2);color:var(--text2);}
 .wk-empty{font-size:11px;color:var(--text3);text-align:center;margin-top:auto;margin-bottom:auto;}
 
 /* ── COURSES ──────────────────────────────────────────── */
@@ -2124,6 +2125,7 @@ function renderToday(){
     const ds=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
     const marks=(data.dayMarks&&data.dayMarks[ds])||{};
     const evs=(data.events||[]).filter(e=>e.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    const dayTk=data.tasks.filter(t=>t.deadline===ds && !t.done);
     const isToday=ds===todayStr();
     const ferie=holidayName(ds);
     let inner=`<div class="wk-day-name">${jours[i]} ${cur.getDate()}</div>`;
@@ -2133,8 +2135,11 @@ function renderToday(){
       inner+=`<div class="wk-pill" style="background:${p.color}22;color:${p.color};font-weight:600;">${icon} ${esc(p.name[0])}</div>`;
     });
     if(ferie) inner+=`<div class="wk-pill" style="background:#f0e0d8;color:#8a4030;">🎉</div>`;
-    inner+=evs.slice(0,3).map(e=>`<div class="wk-pill wk-rdv">${esc(e.time?e.time+' ':'')}${esc(e.text)}</div>`).join('');
-    if(!Object.keys(marks).length && !evs.length && !ferie) inner+=`<div class="wk-empty">—</div>`;
+    inner+=evs.slice(0,2).map(e=>`<div class="wk-pill wk-rdv">${esc(e.time?e.time+' ':'')}${esc(e.text)}</div>`).join('');
+    inner+=dayTk.slice(0,2).map(t=>`<div class="wk-pill wk-task">📋 ${esc(t.title)}</div>`).join('');
+    const wkExtra=(evs.length>2?evs.length-2:0)+(dayTk.length>2?dayTk.length-2:0);
+    if(wkExtra>0) inner+=`<div style="font-size:9px;color:var(--text3);">+${wkExtra}</div>`;
+    if(!Object.keys(marks).length && !evs.length && !dayTk.length && !ferie) inner+=`<div class="wk-empty">—</div>`;
     weekHTML+=`<div class="wk-col${isToday?' wk-today':''}" onclick="showSection('calendar', document.getElementById('nav-calendar')); openDay('${ds}')">${inner}</div>`;
   }
   weekHTML+=`</div></div>`;
@@ -2453,17 +2458,18 @@ function renderDayMarks(){
   const ds=document.getElementById('day-date').value;
   const box=document.getElementById('day-marks');
   if(!box) return;
-  const marks=(data.dayMarks&&data.dayMarks[ds])||{};
   box.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Travail / vacances</div>`+
-    data.persons.map(p=>{
-      const cur=marks[p.id]||'';
-      const mk=(t,lbl)=>`<button class="daymark-btn${cur===t?' on':''}" style="${cur===t?`background:${p.color};border-color:${p.color};color:white;`:''}" onclick="setDayMark('${p.id}','${t}')">${lbl}</button>`;
-      return `<div class="daymark-row">
+    data.persons.map(p=>`
+      <div class="daymark-row" id="dmrow-${p.id}">
         <span class="avatar" style="background:${p.color};width:24px;height:24px;font-size:11px;">${esc(p.name[0])}</span>
         <span style="flex:1;font-size:13px;">${esc(p.name)}</span>
-        ${mk('travail','💼')}${mk('vacances','🏖️')}
-      </div>`;
-    }).join('');
+        ${dayMarkBtns(ds,p)}
+      </div>`).join('');
+}
+function dayMarkBtns(ds,p){
+  const cur=((data.dayMarks&&data.dayMarks[ds])||{})[p.id]||'';
+  const mk=(t,lbl)=>`<button class="daymark-btn${cur===t?' on':''}" style="${cur===t?`background:${p.color};border-color:${p.color};color:white;`:''}" onclick="setDayMark('${p.id}','${t}')">${lbl}</button>`;
+  return mk('travail','💼')+mk('vacances','🏖️');
 }
 
 function setDayMark(pid,type){
@@ -2477,8 +2483,22 @@ function setDayMark(pid,type){
     data.dayMarks[ds][pid]=type;
   }
   saveData();
-  renderDayMarks();   // seul le contenu du modal est mis à jour en direct
-  calNeedsRefresh=true;  // le calendrier sera rafraîchi à la fermeture du modal
+  // met à jour SEULEMENT les deux boutons de cette personne (pas de reconstruction → pas de scintillement)
+  const row=document.getElementById('dmrow-'+pid);
+  const p=data.persons.find(x=>x.id===pid);
+  if(row && p){
+    const btns=row.querySelectorAll('.daymark-btn');
+    const cur=((data.dayMarks[ds])||{})[pid]||'';
+    const types=['travail','vacances'];
+    btns.forEach((b,idx)=>{
+      const on=cur===types[idx];
+      b.classList.toggle('on',on);
+      b.style.background=on?p.color:'';
+      b.style.borderColor=on?p.color:'';
+      b.style.color=on?'white':'';
+    });
+  }
+  calNeedsRefresh=true;  // le calendrier/semaine sera rafraîchi à la fermeture du modal
 }
 let calNeedsRefresh=false;
 
