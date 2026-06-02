@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Maison">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-v2.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512-v2.png">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -546,6 +546,28 @@ header{
 .daymark-btn.on{font-weight:700;}
 .vac-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg2);font-size:13px;}
 .vac-row:last-child{border-bottom:none;}
+/* Planificateur de repas */
+.meals-grid{display:flex;flex-direction:column;gap:8px;}
+.meal-day{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:12px 14px;box-shadow:var(--shadow);
+}
+.meal-day.is-today{border-color:var(--accent);border-width:2px;}
+.meal-day-name{font-weight:700;font-size:13px;color:var(--text);margin-bottom:8px;text-transform:capitalize;}
+.meal-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.meal-slot{display:flex;flex-direction:column;gap:4px;}
+.meal-slot-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;}
+.meal-input-row{display:flex;gap:4px;}
+.meal-input{
+  flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);
+  padding:6px 9px;font-family:'Syne',sans-serif;font-size:12px;color:var(--text);outline:none;min-width:0;
+}
+.meal-input:focus{border-color:var(--accent);}
+.meal-pick{
+  background:var(--accent-l);border:1px solid var(--border);border-radius:var(--r2);
+  padding:0 7px;font-size:13px;cursor:pointer;color:var(--text2);
+}
+.meal-pick:hover{background:var(--accent);color:white;}
 .cal-cell .day-num{font-size:11px;font-weight:600;margin-bottom:4px;}
 .cal-event{
   font-size:10px;padding:1px 5px;border-radius:3px;
@@ -772,6 +794,7 @@ header{
     </div>
     <button class="btn-h" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
     <button class="btn-h" onclick="showSection('achats', document.getElementById('nav-achats'))">🛍️ Achats</button>
+    <button class="btn-h" onclick="showSection('meals', document.getElementById('nav-meals'))">🍽️ Repas</button>
   </div>
 </header>
 
@@ -797,6 +820,9 @@ header{
       </div>
       <div class="nav-item" id="nav-achats" onclick="showSection('achats',this)">
         <span>🛍️</span> Achats <span class="badge blue" id="nb-achats">0</span>
+      </div>
+      <div class="nav-item" id="nav-meals" onclick="showSection('meals',this)">
+        <span>🍽️</span> Repas
       </div>
       <div class="nav-item" id="nav-calendar" onclick="showSection('calendar',this)">
         <span>📅</span> Calendrier
@@ -927,6 +953,24 @@ header{
         <input class="inp" type="text" id="new-achat-note" placeholder="Détail (couleur, dimension…)" style="flex:1;min-width:140px;font-size:12px;padding:6px 10px;" onkeydown="if(event.key==='Enter')addAchat()">
       </div>
       <div class="courses-list" id="achats-list"></div>
+    </div>
+
+    <!-- ═══ SECTION: REPAS ═══ -->
+    <div class="section hidden" id="s-meals">
+      <div class="toolbar">
+        <div class="toolbar-title">Repas de la semaine</div>
+        <button class="btn btn-secondary btn-sm" onclick="clearMeals()">Vider la semaine</button>
+      </div>
+      <div id="meals-grid" class="meals-grid"></div>
+
+      <div class="settings-block" style="margin-top:28px;">
+        <h3>Mes recettes</h3>
+        <div class="settings-list" id="recipes-list"></div>
+        <div class="add-row">
+          <input class="inp" type="text" id="new-recipe" placeholder="Ajouter une recette…" style="flex:1;" onkeydown="if(event.key==='Enter')addRecipe()">
+          <button class="btn btn-primary" onclick="addRecipe()">Ajouter</button>
+        </div>
+      </div>
     </div>
 
     <!-- ═══ SECTION: STATS ═══ -->
@@ -1162,6 +1206,13 @@ header{
           <option value="#6a5aaa">Violet</option>
         </select>
       </div>
+      <div class="form-group"><label class="form-label">Priorité</label>
+        <select id="proj-prio">
+          <option value="haute">🔴 Haute</option>
+          <option value="moyenne" selected>🟠 Moyenne</option>
+          <option value="basse">🔵 Basse</option>
+        </select>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeModal('modal-project')">Annuler</button>
@@ -1228,8 +1279,8 @@ function defaultData() {
       {id:'r3',title:'Ramasser les œufs',icon:'🥚',freq:'daily',days:[],person:'',theme:'t2'}
     ],
     projects:[
-      {id:'pr1',name:'Terrasse brasero',icon:'🏗',color:'#b8622a'},
-      {id:'pr2',name:'Jardin syntropic',icon:'🌿',color:'#5e8c52'}
+      {id:'pr1',name:'Terrasse brasero',icon:'🏗',color:'#b8622a',prio:'moyenne'},
+      {id:'pr2',name:'Jardin syntropic',icon:'🌿',color:'#5e8c52',prio:'moyenne'}
     ],
     courses:[],
     achats:[],
@@ -1237,6 +1288,8 @@ function defaultData() {
     workdays:[],
     dayMarks:{},
     vacances:[],
+    meals:{},
+    recipes:[],
     recurDone:{}
   };
 }
@@ -1275,6 +1328,8 @@ function loadData() {
       if(!Array.isArray(parsed.workdays)) parsed.workdays = [];
       if(typeof parsed.dayMarks!=='object'||!parsed.dayMarks) parsed.dayMarks = {};
       if(!Array.isArray(parsed.vacances)) parsed.vacances = [];
+      if(typeof parsed.meals!=='object'||!parsed.meals) parsed.meals = {};
+      if(!Array.isArray(parsed.recipes)) parsed.recipes = [];
       // migration : ancien "workdays" (Sandra=p2) → dayMarks
       if(parsed.workdays && parsed.workdays.length){
         parsed.workdays.forEach(ds=>{
@@ -1334,6 +1389,8 @@ async function pullRemote(showToast=false){
         if(!Array.isArray(data.workdays)) data.workdays = [];
         if(typeof data.dayMarks!=='object'||!data.dayMarks) data.dayMarks = {};
         if(!Array.isArray(data.vacances)) data.vacances = [];
+        if(typeof data.meals!=='object'||!data.meals) data.meals = {};
+        if(!Array.isArray(data.recipes)) data.recipes = [];
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -1452,6 +1509,7 @@ function showSection(id, btn, isMob=false){
   if(id==='stats') renderStats();
   if(id==='today') renderToday();
   if(id==='achats') renderAchats();
+  if(id==='meals') renderMeals();
   // bandeau "Bonjour" visible uniquement sur la vue Aujourd'hui
   const banner=document.getElementById('today-banner');
   if(banner) banner.style.display = (id==='today') ? '' : 'none';
@@ -1510,6 +1568,7 @@ function render(){
   renderProjects();
   renderCourses();
   renderAchats();
+  renderMeals();
   renderSettings();
   updateNavBadges();
 }
@@ -1526,6 +1585,7 @@ function refresh(){
     case 'projects': renderProjects(); break;
     case 'courses': renderCourses(); break;
     case 'achats': renderAchats(); break;
+    case 'meals': renderMeals(); break;
     case 'calendar': renderCalendar(); break;
     case 'settings': renderSettings(); break;
     case 'stats': if(typeof renderStats==='function') renderStats(); break;
@@ -1974,10 +2034,17 @@ function renderRecurs(){
 function saveProject(){
   const name=document.getElementById('proj-name').value.trim();
   if(!name){ toast('Le nom est obligatoire.','error'); return; }
-  data.projects.push({id:uid(),name,icon:document.getElementById('proj-icon').value,color:document.getElementById('proj-color').value});
+  data.projects.push({id:uid(),name,icon:document.getElementById('proj-icon').value,color:document.getElementById('proj-color').value,prio:document.getElementById('proj-prio').value});
   document.getElementById('proj-name').value='';
   saveData(); render(); closeModal('modal-project');
   toast('Projet créé ✓','success');
+}
+
+function setProjectPrio(id,prio){
+  const p=data.projects.find(x=>x.id===id);
+  if(!p) return;
+  p.prio=prio;
+  saveData(); renderProjects();
 }
 
 function deleteProject(id){
@@ -2004,7 +2071,10 @@ function renderProjects(){
     list.innerHTML='<div class="empty"><div class="ico">📁</div><div class="msg">Aucun projet.</div></div>';
     return;
   }
-  list.innerHTML=data.projects.map(p=>{
+  const prioRank={haute:0,moyenne:1,basse:2};
+  const prioDot={haute:'🔴',moyenne:'🟠',basse:'🔵'};
+  const sortedProjects=[...data.projects].sort((a,b)=>(prioRank[a.prio]??1)-(prioRank[b.prio]??1));
+  list.innerHTML=sortedProjects.map(p=>{
     const tasks=data.tasks.filter(t=>t.project===p.id);
     const done=tasks.filter(t=>t.done).length;
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
@@ -2016,6 +2086,7 @@ function renderProjects(){
       <div class="proj-header" style="border-bottom:3px solid ${p.color};">
         <span class="proj-ico">${p.icon}</span>
         <span class="proj-title">${esc(p.name)}</span>
+        <span title="Priorité" style="font-size:12px;margin-left:6px;">${prioDot[p.prio]||'🟠'}</span>
         <button class="btn-icon" style="margin-left:auto;" onclick="deleteProject('${p.id}')">🗑</button>
       </div>
       <div class="proj-body">
@@ -2047,7 +2118,12 @@ function renderProjects(){
               </li>`).join('')}
             ${projAchats.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${projAchats.length-6} autres…</li>`:''}
           </ul>`:''}
-        <div style="display:flex;gap:8px;margin-top:12px;">
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+          <select class="achat-proj" style="flex:0 0 auto;" onchange="setProjectPrio('${p.id}',this.value)">
+            <option value="haute"${p.prio==='haute'?' selected':''}>🔴 Haute</option>
+            <option value="moyenne"${(p.prio||'moyenne')==='moyenne'?' selected':''}>🟠 Moyenne</option>
+            <option value="basse"${p.prio==='basse'?' selected':''}>🔵 Basse</option>
+          </select>
           <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openTaskForProject('${p.id}')">+ Tâche</button>
           <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openAchatForProject('${p.id}')">+ Achat</button>
         </div>
@@ -2326,6 +2402,98 @@ function clearBoughtAchats(){
     data.achats=(data.achats||[]).filter(a=>!a.done);
     saveData(); renderAchats(); updateNavBadges();
     toast('Achats effectués retirés');
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  REPAS
+// ══════════════════════════════════════════════════════
+const MEAL_DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+function renderMeals(){
+  const grid=document.getElementById('meals-grid');
+  if(!grid) return;
+  if(!data.meals) data.meals={};
+  const today=todayStr();
+  // lundi de la semaine courante
+  const now=new Date();
+  const monday=new Date(now); monday.setDate(now.getDate()-((now.getDay()+6)%7));
+  grid.innerHTML=MEAL_DAYS.map((name,i)=>{
+    const cur=new Date(monday); cur.setDate(monday.getDate()+i);
+    const ds=`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+    const m=data.meals[ds]||{};
+    const slot=(key,lbl)=>`
+      <div class="meal-slot">
+        <span class="meal-slot-label">${lbl}</span>
+        <div class="meal-input-row">
+          <input class="meal-input" value="${esc(m[key]||'')}" placeholder="—" onchange="setMeal('${ds}','${key}',this.value)">
+          ${(data.recipes&&data.recipes.length)?`<button class="meal-pick" onclick="pickRecipe('${ds}','${key}')" title="Choisir une recette">📖</button>`:''}
+        </div>
+      </div>`;
+    return `<div class="meal-day${ds===today?' is-today':''}">
+      <div class="meal-day-name">${name} ${cur.getDate()}</div>
+      <div class="meal-slots">${slot('midi','Midi')}${slot('soir','Soir')}</div>
+    </div>`;
+  }).join('');
+
+  // liste des recettes
+  const rl=document.getElementById('recipes-list');
+  if(rl){
+    rl.innerHTML=(data.recipes||[]).length
+      ? data.recipes.map(r=>`
+        <div class="settings-row">
+          <span style="flex:1;">${esc(r)}</span>
+          <button class="btn-icon" onclick="deleteRecipe('${esc(r).replace(/'/g,"\\'")}')">🗑</button>
+        </div>`).join('')
+      : '<div style="font-size:12px;color:var(--text3);">Aucune recette. Ajoutez vos plats habituels ci-dessous.</div>';
+  }
+}
+
+function setMeal(ds,key,val){
+  if(!data.meals) data.meals={};
+  if(!data.meals[ds]) data.meals[ds]={};
+  val=val.trim();
+  if(val) data.meals[ds][key]=val;
+  else { delete data.meals[ds][key]; if(!Object.keys(data.meals[ds]).length) delete data.meals[ds]; }
+  saveData();
+}
+
+function pickRecipe(ds,key){
+  const recipes=data.recipes||[];
+  if(!recipes.length) return;
+  // petit menu : on réutilise confirmAction-like via prompt natif simple
+  const choice=window.prompt('Recette ?\n\n'+recipes.map((r,i)=>`${i+1}. ${r}`).join('\n')+'\n\nTapez le numéro :');
+  if(!choice) return;
+  const idx=parseInt(choice,10)-1;
+  if(idx>=0 && idx<recipes.length){
+    if(!data.meals[ds]) data.meals[ds]={};
+    data.meals[ds][key]=recipes[idx];
+    saveData(); renderMeals();
+  }
+}
+
+function addRecipe(){
+  const inp=document.getElementById('new-recipe');
+  const v=inp.value.trim();
+  if(!v) return;
+  if(!Array.isArray(data.recipes)) data.recipes=[];
+  if(data.recipes.includes(v)){ toast('Recette déjà dans la liste.'); inp.value=''; return; }
+  data.recipes.push(v);
+  inp.value='';
+  saveData(); renderMeals();
+}
+
+function deleteRecipe(name){
+  data.recipes=(data.recipes||[]).filter(r=>r!==name);
+  saveData(); renderMeals();
+}
+
+function clearMeals(){
+  if(!data.meals||!Object.keys(data.meals).length) return;
+  confirmAction('Vider tous les repas de la semaine ?',()=>{
+    data.meals={};
+    saveData(); renderMeals();
+    toast('Semaine vidée');
   });
 }
 
