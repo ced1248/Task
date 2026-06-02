@@ -2201,17 +2201,17 @@ function renderToday(){
   } else html+=`<div class="today-empty">Rien de prévu. Profite ! 🌿</div>`;
   html+=`</div>`;
 
-  // Récurrences
-  html+=`<div class="today-block">
+  // Récurrences (stockées pour affichage en bas, après Ma semaine)
+  let routinesHTML=`<div class="today-block">
     <div class="today-head">🔁 Routines ${dayRecurs.length?`<span class="today-count">${dayRecurs.length}</span>`:''}</div>`;
   if(dayRecurs.length){
-    html+=dayRecurs.map(r=>`
+    routinesHTML+=dayRecurs.map(r=>`
       <div class="today-row">
         <div class="course-check" onclick="toggleRecur('${r.id}');renderToday()"></div>
         <span class="today-txt">${r.icon} ${esc(r.title)}</span>
       </div>`).join('');
-  } else html+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
-  html+=`</div>`;
+  } else routinesHTML+=`<div class="today-empty">Toutes les routines sont faites ✓</div>`;
+  routinesHTML+=`</div>`;
 
   // ─── Repas du jour ───
   const todayMeal=(data.meals&&data.meals[todayStr()])||{};
@@ -2261,6 +2261,9 @@ function renderToday(){
   weekHTML+=`</div>`;
   weekHTML+=`</div>`;
   html+=weekHTML;
+
+  // Routines en bas
+  html+=routinesHTML;
 
   box.innerHTML=html;
 }
