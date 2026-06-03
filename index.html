@@ -906,7 +906,9 @@ header{
           <input type="text" id="tasks-search" placeholder="Rechercher une tâche…" oninput="onSearch(this.value)">
         </div>
         <div class="filter-row" id="fp-persons"></div>
-        <div class="filter-row" id="fp-themes"></div>
+        <div class="filter-row" id="fp-project" style="margin-bottom:12px;">
+          <select id="filter-project" class="inp" style="width:auto;font-size:13px;padding:6px 10px;" onchange="setProjectFilter(this.value)"></select>
+        </div>
         <div class="filter-row" id="fp-prio">
           <button class="chip active" onclick="setFilter('prio','',this)">Toutes</button>
           <button class="chip" onclick="setFilter('prio','haute',this)">🔴 Haute</button>
@@ -1497,7 +1499,7 @@ let data = loadData();
 // ══════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════
-let fPerson='', fTheme='', fPrio='', searchQ='', calOffset=0;
+let fPerson='', fProject='', fPrio='', searchQ='', calOffset=0;
 
 // ══════════════════════════════════════════════════════
 //  UTILS
@@ -1728,13 +1730,19 @@ function renderFilters(){
   const fp=document.getElementById('fp-persons');
   fp.innerHTML='<button class="chip'+(fPerson?'':' active')+'" onclick="setFilter(\'person\',\'\',this)">Tous</button>'+
     data.persons.map(p=>`<button class="chip${fPerson===p.id?' active':''}" onclick="setFilter('person','${p.id}',this)">${p.name}</button>`).join('');
-  const ft=document.getElementById('fp-themes');
-  ft.innerHTML='<button class="chip'+(fTheme?'':' active')+'" onclick="setFilter(\'theme\',\'\',this)">Tous thèmes</button>'+
-    data.themes.map(t=>`<button class="chip${fTheme===t.id?' active':''}" onclick="setFilter('theme','${t.id}',this)">${t.icon} ${t.name}</button>`).join('');
+  const fpr=document.getElementById('filter-project');
+  if(fpr){
+    fpr.innerHTML='<option value="">📁 Tous les projets</option>'+
+      data.projects.map(p=>`<option value="${p.id}"${fProject===p.id?' selected':''}>${p.icon} ${esc(p.name)}</option>`).join('');
+  }
+}
+function setProjectFilter(val){
+  fProject=val;
+  renderTasks();
+  updateFilterBtn();
 }
 function setFilter(type,val,btn){
   if(type==='person') fPerson=val;
-  else if(type==='theme') fTheme=val;
   else if(type==='prio') fPrio=val;
   const row = btn.closest('.filter-row');
   if(row) row.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
@@ -1753,7 +1761,7 @@ function toggleFilters(){
 function updateFilterBtn(){
   const btn=document.getElementById('btn-filters');
   if(!btn) return;
-  const active = !!(fPerson||fTheme||fPrio||searchQ);
+  const active = !!(fPerson||fProject||fPrio||searchQ);
   btn.textContent = filtersOpen ? '⚙ Masquer' : (active ? '⚙ Filtres •' : '⚙ Filtres');
   btn.classList.toggle('btn-primary', active && !filtersOpen);
   btn.classList.toggle('btn-secondary', !(active && !filtersOpen));
@@ -1805,7 +1813,7 @@ function renderTasks(){
   let tasks = getSortedTasks();
 
   if(fPerson) tasks=tasks.filter(t=>t.person===fPerson);
-  if(fTheme) tasks=tasks.filter(t=>t.theme===fTheme);
+  if(fProject) tasks=tasks.filter(t=>t.project===fProject);
   if(fPrio==='done') tasks=tasks.filter(t=>t.done);
   else if(fPrio) tasks=tasks.filter(t=>t.prio===fPrio&&!t.done);
   else tasks=tasks.filter(t=>!t.done);
@@ -2140,6 +2148,12 @@ function toggleProjectExpand(id){
   else expandedProjects.add(id);
   renderProjects();
 }
+const expandedAchats=new Set();
+function toggleAchatExpand(id){
+  if(expandedAchats.has(id)) expandedAchats.delete(id);
+  else expandedAchats.add(id);
+  renderProjects();
+}
 
 function renderProjects(){
   const list=document.getElementById('project-list');
@@ -2186,13 +2200,13 @@ function renderProjects(){
         ${projAchats.length?`
           <div class="proj-achats-title">🛍️ Achats</div>
           <ul class="proj-tasks">
-            ${projAchats.slice(0,6).map(a=>`
+            ${(expandedAchats.has(p.id)?projAchats:projAchats.slice(0,6)).map(a=>`
               <li class="proj-task-row">
                 <div class="mini-check${a.done?' done':''}" onclick="toggleAchat('${a.id}');renderProjects()">${a.done?'✓':''}</div>
                 <span style="flex:1;${a.done?'text-decoration:line-through;color:var(--text3);':''}" onclick="toggleAchat('${a.id}');renderProjects()">${esc(a.name)}</span>
                 ${a.price?`<span class="tag" style="background:var(--accent-l);color:#4a5536;font-size:10px;font-weight:600;">${fmtEuro(a.price)}</span>`:''}
               </li>`).join('')}
-            ${projAchats.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${projAchats.length-6} autres…</li>`:''}
+            ${projAchats.length>6?`<li style="padding:4px 0;"><button class="proj-seemore" onclick="toggleAchatExpand('${p.id}')">${expandedAchats.has(p.id)?'▴ Réduire':`▾ Voir tout (${projAchats.length})`}</button></li>`:''}
           </ul>`:''}
         <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
           <select class="achat-proj" style="flex:0 0 auto;" onchange="setProjectPrio('${p.id}',this.value)">
