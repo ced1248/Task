@@ -462,6 +462,11 @@ header{
 }
 .proj-budget strong{color:#4a5536;}
 .proj-achats-title{font-size:12px;font-weight:700;color:var(--text2);margin:14px 0 6px;}
+.proj-seemore{
+  background:none;border:none;color:var(--accent);font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;
+}
+.proj-seemore:hover{text-decoration:underline;}
 
 /* ── RECURRENCES ──────────────────────────────────────── */
 .recur-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
@@ -2129,6 +2134,13 @@ function removeFromProject(taskId){
   });
 }
 
+const expandedProjects=new Set();
+function toggleProjectExpand(id){
+  if(expandedProjects.has(id)) expandedProjects.delete(id);
+  else expandedProjects.add(id);
+  renderProjects();
+}
+
 function renderProjects(){
   const list=document.getElementById('project-list');
   if(!data.projects.length){
@@ -2161,7 +2173,7 @@ function renderProjects(){
             <div class="prog-label">${done}/${tasks.length} tâches · ${pct}%</div>
           </div>
           <ul class="proj-tasks">
-            ${tasks.slice(0,6).map(t=>`
+            ${(expandedProjects.has(p.id)?tasks:tasks.slice(0,6)).map(t=>`
               <li class="proj-task-row">
                 <div class="mini-check${t.done?' done':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
                 <span style="flex:1;${t.done?'text-decoration:line-through;color:var(--text3);':''}" onclick="toggleTask('${t.id}')">${esc(t.title)}</span>
@@ -2169,7 +2181,7 @@ function renderProjects(){
                 <button class="btn-icon" style="padding:2px 4px;" onclick="event.stopPropagation();editTask('${t.id}')" data-tip="Modifier">✏️</button>
                 <button class="btn-icon" style="padding:2px 4px;" onclick="event.stopPropagation();removeFromProject('${t.id}')" data-tip="Retirer du projet">✕</button>
               </li>`).join('')}
-            ${tasks.length>6?`<li style="font-size:11px;color:var(--text3);padding:4px 0;">+${tasks.length-6} autres…</li>`:''}
+            ${tasks.length>6?`<li style="padding:4px 0;"><button class="proj-seemore" onclick="toggleProjectExpand('${p.id}')">${expandedProjects.has(p.id)?'▴ Réduire':`▾ Voir tout (${tasks.length})`}</button></li>`:''}
           </ul>`:'<div style="font-size:12px;color:var(--text3);">Aucune tâche.</div>'}
         ${projAchats.length?`
           <div class="proj-achats-title">🛍️ Achats</div>
