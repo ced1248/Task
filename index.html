@@ -601,6 +601,9 @@ header{
 
 /* ── SETTINGS ───────────────────────────────────────────── */
 .settings-block{margin-bottom:28px;}
+.vis-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:6px;cursor:pointer;}
+.vis-label{font-size:14px;}
+.vis-row input[type=checkbox]{width:20px;height:20px;cursor:pointer;accent-color:var(--accent);}
 .theme-picker{display:flex;gap:12px;}
 .theme-swatch{
   width:48px;height:48px;border-radius:50%;border:3px solid transparent;
@@ -817,9 +820,9 @@ header{
       <span>🔍</span>
       <input type="text" id="global-search" placeholder="Rechercher…" oninput="onSearch(this.value)" onkeydown="if(event.key==='Escape')this.value='',onSearch('')">
     </div>
-    <button class="btn-h" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
-    <button class="btn-h" onclick="showSection('achats', document.getElementById('nav-achats'))">🛍️ Achats</button>
-    <button class="btn-h" onclick="showSection('meals', document.getElementById('nav-meals'))">🍽️ Repas</button>
+    <button class="btn-h" data-sec="projects" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
+    <button class="btn-h" data-sec="achats" onclick="showSection('achats', document.getElementById('nav-achats'))">🛍️ Achats</button>
+    <button class="btn-h" data-sec="meals" onclick="showSection('meals', document.getElementById('nav-meals'))">🍽️ Repas</button>
   </div>
 </header>
 
@@ -1012,6 +1015,12 @@ header{
     <!-- ═══ SECTION: RÉGLAGES ═══ -->
     <div class="section hidden" id="s-settings">
       <div class="toolbar-title" style="margin-bottom:20px;">Réglages</div>
+
+      <div class="settings-block">
+        <h3>Affichage des fonctions</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Choisissez ce qui apparaît dans le menu. Ce réglage est propre à cet appareil. « Aujourd'hui » et « Réglages » restent toujours visibles.</p>
+        <div id="visibility-list"></div>
+      </div>
 
       <div class="settings-block">
         <h3>Couleur de l'application</h3>
@@ -1642,6 +1651,7 @@ function render(){
   renderMeals();
   renderSettings();
   updateNavBadges();
+  applyVisibility();
 }
 
 // Rafraîchissement léger : ne redessine que la vue active + les compteurs.
@@ -1679,6 +1689,41 @@ function setColorTheme(t){
   saveData();
   applyColorTheme();
   toast('Couleur appliquée ✓','success');
+}
+
+// ── Affichage des sections (réglage LOCAL à chaque appareil) ──
+// Sections optionnelles (Aujourd'hui et Réglages restent toujours visibles)
+const OPTIONAL_SECTIONS=[
+  {id:'tasks',    label:'Tâches',       icon:'📋'},
+  {id:'recur',    label:'Récurrences',  icon:'🔁'},
+  {id:'projects', label:'Projets',      icon:'📁'},
+  {id:'courses',  label:'Courses',      icon:'🛒'},
+  {id:'achats',   label:'Achats',       icon:'🛍️'},
+  {id:'meals',    label:'Repas',        icon:'🍽️'},
+  {id:'calendar', label:'Calendrier',   icon:'📅'},
+  {id:'stats',    label:'Statistiques', icon:'📊'}
+];
+function sectionVisible(id){
+  const v=localStorage.getItem('show_'+id);
+  return v===null ? true : v==='1';   // visible par défaut
+}
+function setSectionVisible(id,on){
+  localStorage.setItem('show_'+id, on?'1':'0');
+  applyVisibility();
+  // si on masque la section active, on revient à Aujourd'hui
+  if(!on && currentSection===id) showSection('today', document.getElementById('nav-today'));
+  renderSettings();
+}
+function applyVisibility(){
+  OPTIONAL_SECTIONS.forEach(s=>{
+    const vis=sectionVisible(s.id);
+    ['nav-','mnav-'].forEach(pfx=>{
+      const el=document.getElementById(pfx+s.id);
+      if(el) el.style.display = vis?'':'none';
+    });
+    // boutons du header (Projets/Achats/Repas)
+    document.querySelectorAll(`.btn-h[data-sec="${s.id}"]`).forEach(b=>{ b.style.display=vis?'':'none'; });
+  });
 }
 
 // ══════════════════════════════════════════════════════
@@ -3056,6 +3101,18 @@ function renderStats(){
 //  SETTINGS
 // ══════════════════════════════════════════════════════
 function renderSettings(){
+  // Affichage des fonctions (cases à cocher, local à l'appareil)
+  const visList=document.getElementById('visibility-list');
+  if(visList){
+    visList.innerHTML=OPTIONAL_SECTIONS.map(s=>{
+      const on=sectionVisible(s.id);
+      return `<label class="vis-row">
+        <span class="vis-label">${s.icon} ${s.label}</span>
+        <input type="checkbox" ${on?'checked':''} onchange="setSectionVisible('${s.id}',this.checked)">
+      </label>`;
+    }).join('');
+  }
+
   document.getElementById('person-list').innerHTML=data.persons.map(p=>`
     <div class="settings-row">
       <div class="avatar" style="background:${p.color};">${esc(p.name[0]||'?')}</div>
