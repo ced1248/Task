@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#2d4a1e">
+<meta name="description" content="Carnet de potager gratuit : suivi dépenses &amp; récoltes, 42 fiches légumes, tableau des associations. Fonctionne hors ligne.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mon Potager">
+<title>Mon Potager — Carnet & Fiches légumes</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232d4a1e'/%3E%3Cellipse cx='32' cy='42' rx='18' ry='10' fill='%238b6f47'/%3E%3Cellipse cx='32' cy='40' rx='16' ry='8' fill='%23a07850'/%3E%3Cpath d='M32 38 Q28 28 20 24' stroke='%237c9a5e' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M32 38 Q36 26 44 22' stroke='%237c9a5e' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M32 38 Q32 22 32 16' stroke='%23a0c878' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='23' rx='6' ry='4' fill='%237c9a5e' transform='rotate(-20 20 23)'/%3E%3Cellipse cx='44' cy='21' rx='6' ry='4' fill='%237c9a5e' transform='rotate(20 44 21)'/%3E%3Cellipse cx='32' cy='15' rx='5' ry='4' fill='%23a0c878'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#f5f0e8;font-family:Georgia,serif;min-height:100vh;padding-bottom:70px;}
+
+/* HEADER */
+.header{background:#2d4a1e;padding:18px 16px 12px;position:relative;overflow:hidden;}
+.header::after{content:"";position:absolute;top:-20px;right:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;}
+.header-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.header-text{flex:1;}
+.header-sub{font-size:10px;color:#a0c878;letter-spacing:3px;text-transform:uppercase;margin-bottom:3px;font-family:sans-serif;}
+.header-title{font-size:22px;font-weight:bold;color:#fff;line-height:1.1;}
+.header-year{font-size:11px;color:#88aa66;margin-top:3px;font-family:sans-serif;}
+.btn-edit-header{background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:8px;color:#fff;font-size:12px;font-family:sans-serif;padding:7px 10px;cursor:pointer;white-space:nowrap;margin-top:4px;flex-shrink:0;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:400px;}
+.modal-title{font-size:12px;font-family:sans-serif;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:14px;}
+.modal-btns{display:flex;gap:10px;margin-top:14px;}
+.modal-btns button{flex:1;padding:12px;border-radius:8px;font-size:14px;font-family:sans-serif;font-weight:bold;cursor:pointer;border:none;}
+.btn-cancel{background:#f0ebe0;color:#666;}
+.btn-save{background:#2d4a1e;color:#fff;}
+
+/* FLASH */
+.flash{background:#7c9a5e;color:#fff;text-align:center;padding:8px;font-size:13px;font-family:sans-serif;display:none;}
+.flash.show{display:block;}
+.flash.err{background:#8b2d1e;}
+
+/* TABS */
+.tabs{display:flex;background:#e8e0d0;border-bottom:2px solid #c8b89a;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;min-width:0;padding:10px 4px;border:none;cursor:pointer;font-size:11px;font-family:sans-serif;background:transparent;color:#666;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+.tab.active{background:#f5f0e8;color:#2d4a1e;font-weight:bold;border-bottom-color:#2d4a1e;}
+
+.content{padding:14px 16px;max-width:600px;margin:0 auto;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* CARDS */
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.card-title{font-size:10px;font-family:sans-serif;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:12px;}
+
+/* ── BILAN ── */
+.solde-card{border-radius:12px;padding:20px;margin-bottom:14px;text-align:center;}
+.solde-card.positif{background:#2d4a1e;}
+.solde-card.negatif{background:#6b2d1e;}
+.solde-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);font-family:sans-serif;margin-bottom:4px;}
+.solde-val{font-size:38px;font-weight:bold;color:#fff;}
+.solde-msg{font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;font-family:sans-serif;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.stat-box{background:#fff;border-radius:10px;padding:12px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.stat-icon{font-size:18px;}
+.stat-val{font-size:16px;font-weight:bold;margin:3px 0 2px;}
+.stat-label{font-size:9px;color:#999;font-family:sans-serif;text-transform:uppercase;letter-spacing:1px;}
+.bar-row{margin-bottom:10px;}
+.bar-header{display:flex;justify-content:space-between;margin-bottom:4px;font-family:sans-serif;font-size:13px;}
+.bar-track{height:6px;background:#f0ebe0;border-radius:3px;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+.top-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0ebe0;font-family:sans-serif;font-size:13px;}
+.top-row:last-child{border-bottom:none;}
+.chart-wrap{width:100%;}
+canvas#chart-annees{display:block;width:100% !important;}
+.chart-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-family:sans-serif;font-size:11px;flex-wrap:wrap;}
+.legend-dot-c{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+
+/* ── FORMS ── */
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group{margin-bottom:10px;}
+label{display:block;font-size:10px;font-family:sans-serif;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:4px;}
+input,select{width:100%;padding:9px 10px;border:1.5px solid #e0d8cc;border-radius:7px;font-size:14px;font-family:sans-serif;background:#faf8f4;outline:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:#7c9a5e;}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-family:sans-serif;font-weight:bold;cursor:pointer;letter-spacing:0.5px;color:#fff;margin-top:4px;}
+.btn-green{background:#2d4a1e;}
+.btn-light{background:#7c9a5e;}
+.unite-toggle{display:flex;border-radius:7px;overflow:hidden;border:1.5px solid #e0d8cc;}
+.unite-btn{flex:1;padding:9px;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;background:#faf8f4;color:#666;transition:all 0.15s;}
+.unite-btn.active{background:#2d4a1e;color:#fff;font-weight:bold;}
+.autre-box{background:#f0f7ea;border-radius:8px;padding:12px;margin-bottom:10px;border:1.5px solid #c8ddb8;}
+.autre-box label{color:#2d4a1e;}
+.preview-box{background:#f0f7ea;border-radius:6px;padding:8px 12px;font-family:sans-serif;font-size:13px;color:#2d4a1e;display:none;width:100%;}
+.list-item{background:#fff;border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.item-icon{font-size:20px;flex-shrink:0;}
+.item-body{flex:1;min-width:0;}
+.item-name{font-family:sans-serif;font-size:13px;font-weight:bold;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-meta{font-family:sans-serif;font-size:11px;color:#999;}
+.item-val{font-family:sans-serif;font-size:15px;font-weight:bold;white-space:nowrap;}
+.item-del{border:none;background:none;cursor:pointer;color:#ccc;font-size:20px;padding:0 4px;line-height:1;flex-shrink:0;}
+.empty{text-align:center;color:#bbb;font-family:sans-serif;font-size:13px;padding:24px;}
+.btn-outline{width:100%;padding:11px;border-radius:8px;font-size:13px;font-family:sans-serif;font-weight:bold;cursor:pointer;background:transparent;margin-top:8px;letter-spacing:0.5px;}
+.btn-outline-green{border:2px solid #2d4a1e;color:#2d4a1e;}
+.btn-outline-brown{border:2px solid #8b6f47;color:#8b6f47;}
+.btn-outline-blue{border:2px solid #5a7a8a;color:#5a7a8a;}
+.import-note{font-size:11px;color:#aaa;font-family:sans-serif;margin-top:6px;text-align:center;line-height:1.4;}
+
+/* ── FICHES ── */
+.search-bar{padding:10px 0 4px;}
+.search-input{width:100%;padding:10px 14px;border:1.5px solid #c8b89a;border-radius:8px;font-size:14px;font-family:sans-serif;background:#fff;outline:none;}
+.search-input:focus{border-color:#7c9a5e;}
+.fam-filters{display:flex;gap:6px;overflow-x:auto;padding:8px 0 10px;scrollbar-width:none;}
+.fam-filters::-webkit-scrollbar{display:none;}
+.filter-btn{padding:5px 11px;border-radius:20px;border:1.5px solid #c8b89a;font-size:11px;font-family:sans-serif;cursor:pointer;background:#fff;color:#666;white-space:nowrap;flex-shrink:0;}
+.filter-btn.active{background:#2d4a1e;color:#fff;border-color:#2d4a1e;}
+.legumes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.legume-card{background:#fff;border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.07);border:2px solid transparent;transition:all 0.15s;}
+.legume-card:active{transform:scale(0.97);}
+.legume-icon{font-size:26px;margin-bottom:4px;}
+.legume-name{font-size:12px;font-family:sans-serif;font-weight:bold;color:#333;}
+.legume-fam{font-size:10px;color:#aaa;font-family:sans-serif;margin-top:2px;}
+.fiche{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);overflow:hidden;margin-bottom:16px;}
+.fiche-header{background:#2d4a1e;padding:16px;display:flex;align-items:center;gap:12px;}
+.fiche-nom{font-size:20px;font-weight:bold;color:#fff;}
+.fiche-famille{font-size:11px;color:#a0c878;font-family:sans-serif;letter-spacing:1px;text-transform:uppercase;}
+.fiche-latin{font-size:11px;color:#88aa66;font-family:sans-serif;font-style:italic;margin-top:2px;}
+.fiche-section{padding:14px 16px;border-bottom:1px solid #f0ebe0;}
+.fiche-section:last-child{border-bottom:none;}
+.fiche-section-title{font-size:10px;font-family:sans-serif;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:10px;}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.quick-box{background:#f8f5ef;border-radius:8px;padding:10px;text-align:center;}
+.quick-val{font-size:13px;font-weight:bold;color:#2d4a1e;margin-bottom:2px;}
+.quick-lbl{font-size:9px;color:#999;font-family:sans-serif;text-transform:uppercase;letter-spacing:0.5px;}
+.assoc-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}
+.assoc-tag{padding:4px 9px;border-radius:20px;font-size:11px;font-family:sans-serif;font-weight:bold;}
+.tag-bf{background:#2d4a1e;color:#fff;}
+.tag-bm{background:#7c9a5e;color:#fff;}
+.tag-bw{background:#c8ddb8;color:#2d4a1e;}
+.tag-mf{background:#8b1a4a;color:#fff;}
+.tag-mm{background:#d44a8a;color:#fff;}
+.tag-mw{background:#f0b8d0;color:#8b1a4a;}
+.legend-row-a{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.legend-item-a{display:flex;align-items:center;gap:4px;font-size:10px;font-family:sans-serif;color:#666;}
+.legend-dot-a{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.cal-months-row{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;margin-bottom:2px;}
+.cal-month{font-size:8px;font-family:sans-serif;text-align:center;color:#aaa;}
+.cal-grid-r{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;}
+.cal-bar{height:12px;border-radius:3px;}
+.cal-si{background:#a0c878;}.cal-se{background:#2d4a1e;}.cal-re{background:#f0a030;}.cal-vd{background:#f0ebe0;}
+.cal-lbl{font-size:10px;font-family:sans-serif;color:#666;margin-bottom:3px;margin-top:6px;display:flex;align-items:center;gap:5px;}
+.cal-dot-l{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.guilde-box{background:#f0f7ea;border-radius:8px;padding:12px;border-left:3px solid #7c9a5e;}
+.bec-box{background:#fdf8f0;border-radius:8px;padding:12px;border-left:3px solid #c8a050;}
+.fiche-text{font-family:sans-serif;font-size:13px;color:#333;line-height:1.5;}
+.btn-back{display:flex;align-items:center;gap:6px;background:transparent;border:none;font-family:sans-serif;font-size:13px;color:#666;cursor:pointer;padding:8px 0;margin-bottom:8px;}
+
+/* ── ASSOCIATIONS ── */
+.assoc-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.assoc-tab{flex:1;padding:10px 6px;border:2px solid #c8b89a;border-radius:8px;font-size:12px;font-family:sans-serif;cursor:pointer;background:#fff;color:#666;text-align:center;font-weight:bold;}
+.assoc-tab.active{background:#2d4a1e;color:#fff;border-color:#2d4a1e;}
+/* Résumé par légume */
+.assoc-select-wrap{margin-bottom:12px;}
+.assoc-resume{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.assoc-resume-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.assoc-resume-icon{font-size:30px;}
+.assoc-resume-nom{font-size:18px;font-weight:bold;color:#2d4a1e;}
+.assoc-section-lbl{font-size:10px;font-family:sans-serif;text-transform:uppercase;letter-spacing:2px;color:#999;margin:10px 0 6px;}
+/* Grille complète */
+.grille-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.grille-hint{font-size:11px;font-family:sans-serif;color:#aaa;margin-bottom:8px;text-align:center;}
+table.grille{border-collapse:collapse;font-family:sans-serif;font-size:9px;}
+table.grille th,table.grille td{padding:0;border:1px solid #e8e0d0;}
+table.grille th.row-hd{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;padding:4px 3px;background:#f8f5ef;font-weight:bold;color:#444;text-align:left;min-width:18px;}
+table.grille th.col-hd{white-space:nowrap;padding:3px 4px;background:#f8f5ef;font-weight:bold;color:#444;font-size:9px;position:sticky;left:0;z-index:2;}
+table.grille td.cell{width:18px;height:18px;text-align:center;vertical-align:middle;font-size:10px;}
+.c-bf{background:#2d4a1e;}.c-bm{background:#7c9a5e;}.c-bw{background:#c8ddb8;}
+.c-mf{background:#8b1a4a;}.c-mm{background:#d44a8a;}.c-mw{background:#f0b8d0;}
+.c-same{background:#222;}.c-empty{background:#fff;}
+.grille-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-family:sans-serif;font-size:10px;}
+.gl-item{display:flex;align-items:center;gap:4px;}
+.gl-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0;}
+
+/* ── BIENVENUE ── */
+.welcome-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.welcome-overlay.hidden{display:none;}
+.welcome-box{background:#fff;border-radius:18px;padding:0;overflow:hidden;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.3);}
+.welcome-hero{background:#2d4a1e;padding:28px 20px 20px;text-align:center;position:relative;}
+.welcome-hero-icon{font-size:52px;margin-bottom:8px;}
+.welcome-hero-title{font-size:22px;font-weight:bold;color:#fff;margin-bottom:4px;}
+.welcome-hero-sub{font-size:12px;color:#a0c878;font-family:sans-serif;letter-spacing:1px;}
+.welcome-body{padding:20px;}
+.welcome-feature{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;}
+.welcome-feature-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.welcome-feature-text{flex:1;}
+.welcome-feature-title{font-size:13px;font-weight:bold;font-family:sans-serif;color:#2d4a1e;margin-bottom:2px;}
+.welcome-feature-desc{font-size:12px;font-family:sans-serif;color:#666;line-height:1.4;}
+.welcome-divider{height:1px;background:#f0ebe0;margin:14px 0;}
+.welcome-install{background:#f0f7ea;border-radius:10px;padding:12px;margin-bottom:16px;}
+.welcome-install-title{font-size:11px;font-family:sans-serif;font-weight:bold;color:#2d4a1e;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.welcome-install-step{font-size:12px;font-family:sans-serif;color:#555;line-height:1.6;}
+.welcome-btn{width:100%;padding:14px;background:#2d4a1e;color:#fff;border:none;border-radius:10px;font-size:15px;font-family:sans-serif;font-weight:bold;cursor:pointer;letter-spacing:0.5px;}
+.welcome-footer{text-align:center;font-size:10px;font-family:sans-serif;color:#aaa;margin-top:10px;line-height:1.5;}
+
+
+/* ── RAPPELS DE SAISON ── */
+.saison-card{background:linear-gradient(135deg,#2d4a1e,#3d5e2a);border-radius:12px;padding:16px;margin-bottom:14px;color:#fff;}
+.saison-title{font-size:11px;font-family:sans-serif;text-transform:uppercase;letter-spacing:2px;color:#a0c878;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.saison-group{margin-bottom:12px;}
+.saison-group:last-child{margin-bottom:0;}
+.saison-group-lbl{font-size:11px;font-family:sans-serif;color:#c8ddb8;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.saison-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.saison-tag{background:rgba(255,255,255,0.15);border-radius:16px;padding:3px 10px;font-size:12px;font-family:sans-serif;cursor:pointer;}
+.saison-tag:active{background:rgba(255,255,255,0.3);}
+.saison-empty{font-size:12px;font-family:sans-serif;color:#88aa66;font-style:italic;}
+
+
+/* ── NOTES PERSO ── */
+.note-perso-box{background:#fffdf7;border:1.5px dashed #c8b89a;border-radius:8px;padding:12px;}
+.note-perso-area{width:100%;min-height:70px;border:1.5px solid #e0d8cc;border-radius:7px;padding:9px;font-size:13px;font-family:sans-serif;background:#fff;outline:none;resize:vertical;line-height:1.5;}
+.note-perso-area:focus{border-color:#7c9a5e;}
+.note-perso-save{margin-top:8px;padding:8px 16px;background:#7c9a5e;color:#fff;border:none;border-radius:7px;font-size:12px;font-family:sans-serif;font-weight:bold;cursor:pointer;}
+.note-perso-hint{font-size:11px;font-family:sans-serif;color:#aaa;margin-top:6px;}
+
+
+/* ── RECHERCHE LISTE ── */
+.list-search{width:100%;padding:9px 12px;border:1.5px solid #e0d8cc;border-radius:8px;font-size:13px;font-family:sans-serif;background:#fff;outline:none;margin-bottom:10px;}
+.list-search:focus{border-color:#7c9a5e;}
+
+</style>
+</head>
+<body>
+
+<!-- MODAL EN-TÊTE -->
+<div class="modal-overlay" id="modal-header">
+  <div class="modal">
+    <div class="modal-title">✏ Modifier l'en-tête</div>
+    <div class="form-group"><label>Titre principal</label><input type="text" id="edit-titre" placeholder="Mon Potager"></div>
+    <div class="form-group"><label>Sous-titre</label><input type="text" id="edit-sous-titre" placeholder="Mon potager · 200 m²"></div>
+    <div class="form-group"><label>Année / période</label><input type="text" id="edit-annee" placeholder="2026"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btn-annuler-header">Annuler</button>
+      <button class="btn-save" id="btn-sauver-header">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-title">⚠ Confirmer l'import</div>
+    <p style="font-family:sans-serif;font-size:14px;color:#444;line-height:1.5;margin-bottom:6px">Cette opération <strong>remplacera toutes les données actuelles</strong>.</p>
+    <p style="font-family:sans-serif;font-size:12px;color:#888;line-height:1.5">Exportez d'abord une sauvegarde JSON.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btn-annuler-import">Annuler</button>
+      <button class="btn-save" style="background:#8b4513" id="btn-confirmer-import">Remplacer</button>
+    </div>
+  </div>
+</div>
+
+<!-- EN-TÊTE -->
+
+<!-- ÉCRAN DE BIENVENUE -->
+<div class="welcome-overlay" id="welcome-overlay">
+  <div class="welcome-box">
+    <div class="welcome-hero">
+      <div class="welcome-hero-icon">🌱</div>
+      <div class="welcome-hero-title">Mon Potager</div>
+      <div class="welcome-hero-sub">Carnet de bord & guide des cultures</div>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">📊</div>
+        <div class="welcome-feature-text">
+          <div class="welcome-feature-title">Suivi dépenses & récoltes</div>
+          <div class="welcome-feature-desc">Calculez la rentabilité réelle de votre potager, année après année.</div>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">📖</div>
+        <div class="welcome-feature-text">
+          <div class="welcome-feature-title">42 fiches légumes</div>
+          <div class="welcome-feature-desc">Calendrier Lozère, distances, rotations, guildes permaculture, notes Bec Hellouin.</div>
+        </div>
+      </div>
+      <div class="welcome-feature">
+        <div class="welcome-feature-icon">🌿</div>
+        <div class="welcome-feature-text">
+          <div class="welcome-feature-title">Tableau des associations</div>
+          <div class="welcome-feature-desc">Bonnes et mauvaises associations par légume, avec grille complète 42×42.</div>
+        </div>
+      </div>
+      <div class="welcome-divider"></div>
+      <div class="welcome-install">
+        <div class="welcome-install-title">📱 Installer sur votre téléphone</div>
+        <div class="welcome-install-step">
+          Android : Menu ⋮ → <strong>Ajouter à l'écran d'accueil</strong><br>
+          iPhone : Partager ↑ → <strong>Sur l'écran d'accueil</strong>
+        </div>
+      </div>
+      <button class="welcome-btn" id="welcome-btn">Commencer →</button>
+      <div class="welcome-footer">
+        Fonctionne hors ligne · Données stockées sur votre appareil<br>
+        Gratuit · Sans publicité · Sans inscription
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-text">
+      <div class="header-sub" id="disp-sous-titre">Mon potager · 200 m²</div>
+      <div class="header-title" id="disp-titre">Mon Potager</div>
+      <div class="header-year" id="disp-annee"></div>
+    </div>
+    <button class="btn-edit-header" id="btn-open-header">✏ Modifier</button>
+  </div>
+</div>
+
+<div class="flash" id="flash"></div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-bilan">📊 Bilan</button>
+  <button class="tab" id="tab-depenses">💸 Dépenses</button>
+  <button class="tab" id="tab-recoltes">🥕 Récoltes</button>
+  <button class="tab" id="tab-fiches">📖 Fiches</button>
+  <button class="tab" id="tab-assoc">🌿 Associations</button>
+</div>
+
+<div class="content">
+
+<!-- ══ BILAN ══════════════════════════════════════════════ -->
+<div class="panel active" id="panel-bilan">
+  <div class="saison-card" id="saison-card">
+    <div class="saison-title">📅 <span id="saison-mois">Ce mois-ci en Lozère</span></div>
+    <div id="saison-content"></div>
+  </div>
+  <div class="solde-card positif" id="solde-card">
+    <div class="solde-sub">Bilan net</div>
+    <div class="solde-val" id="solde-val">0 €</div>
+    <div class="solde-msg" id="solde-msg">Aucune donnée</div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-icon">💸</div><div class="stat-val" id="stat-dep" style="color:#8b6f47">0 €</div><div class="stat-label">Dépensé</div></div>
+    <div class="stat-box"><div class="stat-icon">💰</div><div class="stat-val" id="stat-val-r" style="color:#7c9a5e">0 €</div><div class="stat-label">Valeur récoltes</div></div>
+    <div class="stat-box"><div class="stat-icon">⚖️</div><div class="stat-val" id="stat-kg" style="color:#5a7a8a">0 kg</div><div class="stat-label">Poids récolté</div></div>
+  </div>
+  <div class="card" id="card-chart" style="display:none">
+    <div class="card-title">Comparaison par année</div>
+    <div class="chart-wrap"><canvas id="chart-annees" height="180"></canvas></div>
+    <div class="chart-legend">
+      <span><span class="legend-dot-c" style="background:#8b6f47"></span>Dépenses</span>
+      <span><span class="legend-dot-c" style="background:#7c9a5e"></span>Récoltes</span>
+      <span><span class="legend-dot-c" style="background:#2d4a1e;border-radius:50%"></span>Solde net</span>
+    </div>
+  </div>
+  <div class="card" id="card-cats" style="display:none"><div class="card-title">Dépenses par catégorie</div><div id="cats-content"></div></div>
+  <div class="card" id="card-top" style="display:none"><div class="card-title">Top récoltes</div><div id="top-content"></div></div>
+  <div class="card">
+    <div class="card-title">Sauvegarder &amp; exporter</div>
+    <button class="btn-outline btn-outline-green" id="btn-export-json">💾 Sauvegarder (JSON)</button>
+    <button class="btn-outline btn-outline-brown" id="btn-import-json">📂 Restaurer depuis JSON</button>
+    <input type="file" id="file-import" accept=".json" style="display:none">
+    <p class="import-note">Le fichier JSON contient toutes vos données.</p>
+    <button class="btn-outline btn-outline-blue" style="margin-top:14px" id="btn-csv-dep">⬇ Dépenses (.csv)</button>
+    <button class="btn-outline btn-outline-blue" id="btn-csv-rec">⬇ Récoltes (.csv)</button>
+  </div>
+</div>
+
+<!-- ══ DÉPENSES ═══════════════════════════════════════════ -->
+<div class="panel" id="panel-depenses">
+  <div class="card">
+    <div class="card-title">Nouvelle dépense</div>
+    <div class="form-grid2">
+      <div><label>Date</label><input type="date" id="dep-date"></div>
+      <div><label>Montant (€)</label><input type="number" id="dep-montant" placeholder="0.00" step="0.01" style="font-weight:bold"></div>
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="dep-cat"><option>Semences</option><option>Plants achetés</option><option>Terreau / amendements</option><option>Matériel / outillage</option></select>
+    </div>
+    <div class="form-group"><label>Description (optionnel)</label><input type="text" id="dep-desc" placeholder="ex : Graines de carottes Nantaise"></div>
+    <button class="btn btn-green" id="btn-add-dep">+ Ajouter</button>
+  </div>
+  <input class="list-search" type="text" id="search-dep" placeholder="🔍  Filtrer les dépenses…">
+  <div id="list-depenses"></div>
+</div>
+
+<!-- ══ RÉCOLTES ═══════════════════════════════════════════ -->
+<div class="panel" id="panel-recoltes">
+  <div class="card">
+    <div class="card-title">Nouvelle récolte</div>
+    <div class="autre-box"><label>🌿 Autre légume (saisie libre)</label><input type="text" id="rec-autre" placeholder="ex : Panais, Chou kale…"></div>
+    <div class="form-grid2">
+      <div><label>Date</label><input type="date" id="rec-date"></div>
+      <div><label id="lbl-quantite">Poids (kg)</label><input type="number" id="rec-poids" placeholder="0.0" step="0.1" style="font-weight:bold"></div>
+    </div>
+    <div class="form-group" id="row-legume-select">
+      <label>Légume (liste)</label>
+      <select id="rec-legume">
+        <option value="3.5">Tomates</option><option value="1.8">Courgettes</option>
+        <option value="4.2">Haricots verts</option><option value="1.5">Salades</option>
+        <option value="1.2">Pommes de terre</option><option value="1.6">Carottes</option>
+        <option value="1.8">Betteraves</option><option value="2.4">Poireaux</option>
+        <option value="1.4">Oignons</option><option value="8.0">Ail</option>
+        <option value="1.5">Courges</option><option value="3.8">Poivrons</option>
+        <option value="3.0">Aubergines</option><option value="1.8">Concombres</option>
+        <option value="2.0">Radis</option><option value="4.0">Épinards</option>
+        <option value="2.5">Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Unité de mesure</label>
+      <div class="unite-toggle"><button class="unite-btn active" id="btn-kg">⚖️ Kilogrammes</button><button class="unite-btn" id="btn-unite">🔢 Unités</button></div>
+    </div>
+    <div class="form-grid2">
+      <div><label id="lbl-prix">Prix réf. (€/kg)</label><input type="number" id="rec-prix" value="3.5" step="0.1"></div>
+      <div style="display:flex;align-items:flex-end"><div class="preview-box" id="preview-box"></div></div>
+    </div>
+    <button class="btn btn-light" id="btn-add-rec">+ Ajouter</button>
+  </div>
+  <input class="list-search" type="text" id="search-rec" placeholder="🔍  Filtrer les récoltes…">
+  <div id="list-recoltes"></div>
+</div>
+
+<!-- ══ FICHES ═════════════════════════════════════════════ -->
+<div class="panel" id="panel-fiches">
+  <div id="fiches-liste-view">
+    <div class="search-bar"><input class="search-input" type="text" id="fiche-search" placeholder="🔍  Rechercher un légume…"></div>
+    <div class="fam-filters" id="fam-filters">
+      <button class="filter-btn active" data-type="all">Tous</button>
+      <button class="filter-btn" data-type="legume">🥕 Légumes</button>
+      <button class="filter-btn" data-type="fruit">🍓 Petits fruits</button>
+      <button class="filter-btn" data-type="aromatique">🌿 Aromatiques</button>
+      <button class="filter-btn" data-type="fleur">🌸 Fleurs compagnes</button>
+    </div>
+    <div id="legumes-grid-container"></div>
+  </div>
+  <div id="fiches-detail-view" style="display:none"></div>
+</div>
+
+<!-- ══ ASSOCIATIONS ═══════════════════════════════════════ -->
+<div class="panel" id="panel-assoc">
+  <div class="assoc-tabs">
+    <button class="assoc-tab active" id="assoc-tab-resume">🔍 Par légume</button>
+    <button class="assoc-tab" id="assoc-tab-grille">🗂 Grille complète</button>
+  </div>
+
+  <!-- Résumé par légume -->
+  <div id="assoc-resume-panel">
+    <div class="assoc-select-wrap card" style="padding:14px">
+      <div class="card-title">Choisir un légume</div>
+      <select id="assoc-select" style="margin-bottom:0"></select>
+    </div>
+    <div id="assoc-resume-content"></div>
+  </div>
+
+  <!-- Grille complète -->
+  <div id="assoc-grille-panel" style="display:none">
+    <div class="card" style="padding:12px">
+      <div class="grille-hint">⟵ Faire défiler horizontalement</div>
+      <div class="grille-wrap"><div id="grille-container"></div></div>
+      <div class="grille-legend">
+        <div class="gl-item"><div class="gl-dot c-bf"></div>Bonne forte</div>
+        <div class="gl-item"><div class="gl-dot c-bm"></div>Bonne moy.</div>
+        <div class="gl-item"><div class="gl-dot c-bw"></div>Bonne faible</div>
+        <div class="gl-item"><div class="gl-dot c-mf"></div>Mauvaise forte</div>
+        <div class="gl-item"><div class="gl-dot c-mm"></div>Mauvaise moy.</div>
+        <div class="gl-item"><div class="gl-dot c-mw"></div>Mauvaise faible</div>
+        <div class="gl-item"><div class="gl-dot c-same"></div>Même famille</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// DONNÉES LÉGUMES
+// ══════════════════════════════════════════════════════════════════
+const MOIS_LBL = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+const CAT_COLORS = {"Semences":"#7c9a5e","Plants achetés":"#a0c878","Terreau / amendements":"#8b6f47","Matériel / outillage":"#5a7a8a"};
+const CAT_ICONS  = {"Semences":"🌱","Plants achetés":"🪴","Terreau / amendements":"🌍","Matériel / outillage":"🔧"};
+
+const LEGUMES = [
+  {id:"ail",type:"legume",nom:"Ail",icon:"🧄",famille:"Alliacée",latin:"Allium sativum",espacement:"10×20cm",profondeur:"5cm",exposition:"Plein soleil",sol:"Bien drainé, léger, riche",ph:"6–7",semis_int:[],semis_ext:[10,11,3,4],recolte:[6,7],bons_forts:["Carotte","Tomate","Fraise","Betterave"],bons_moy:["Laitue","Concombre","Poivron"],bons_faibles:["Cerfeuil","Persil"],mauvais_forts:["Pois","Haricot"],mauvais_moy:["Fève"],mauvais_faibles:[],guilde:"Associer l'ail en bordure des tomates (repousse les pucerons). Guilde classique ail–carotte : les odeurs perturbent les mouches respectives.",bec_hellouin:"Semé dense en intercalaire. Plantation en automne recommandée en Lozère pour la vernalisation. Variétés : Messidrome (violet, rustique), Cristo.",rotation:"Après légumineuses. Éviter de revenir avant 3–4 ans.",engrais_verts:"Phacélie ou trèfle blanc après récolte.",notes:"Tresser et suspendre à l'abri. Variétés adaptées altitude : Messidrome, Cristo.",gressent:"Variétés anciennes (Gressent, 1869) : Ail rose (plus hâtif et un peu moins fort que l'ail commun, pour tous les climats)."},
+  {id:"aubergine",type:"legume",nom:"Aubergine",icon:"🍆",famille:"Solanacée",latin:"Solanum melongena",espacement:"50×60cm",profondeur:"—",exposition:"Plein soleil, abri du vent",sol:"Riche, humifère, bien drainé",ph:"5.5–6.5",semis_int:[2,3],semis_ext:[],recolte:[7,8,9,10],bons_forts:["Basilic","Thym","Poivron"],bons_moy:["Haricot","Poireau","Tomate"],bons_faibles:["Laitue","Épinard"],mauvais_forts:["Fenouil"],mauvais_moy:["Pomme de terre"],mauvais_faibles:[],guilde:"Aubergine + basilic + œillet d'Inde. Sous-planter avec laitue ou épinard.",bec_hellouin:"Culture sous abri. En Lozère, serre froide indispensable. Semis en godets février sous 20°C.",rotation:"Après légumineuses. Jamais après tomate, poivron ou pomme de terre. Retour 4 ans.",engrais_verts:"Vesce-avoine après arrachage.",notes:"Variétés précoces : Barbentane, Black Beauty.",gressent:"Variétés anciennes (Gressent, 1869) : Naine très hâtive (la plus précoce), Violette longue (la meilleure pour le Nord et le Centre), Monstrueuse (la plus grosse), Blanche de Chine (curieuse)."},
+  {id:"betterave",type:"legume",nom:"Betterave",icon:"🟣",famille:"Chénopodiacée",latin:"Beta vulgaris",espacement:"10×30cm",profondeur:"2cm",exposition:"Soleil ou mi-ombre",sol:"Profond, meuble, sans cailloux",ph:"6.5–7.5",semis_int:[3,4],semis_ext:[4,5,6,7],recolte:[7,8,9,10],bons_forts:["Oignon","Chou","Laitue","Haricot"],bons_moy:["Ail","Céleri","Courge"],bons_faibles:["Radis","Carotte"],mauvais_forts:["Épinard","Bette"],mauvais_moy:["Maïs"],mauvais_faibles:[],guilde:"Associer avec oignon et laitue. Les feuilles de betterave sont comestibles.",bec_hellouin:"Démariage à 10cm obligatoire. En bordure des planches de choux.",rotation:"Après légumineuses. Éviter après épinard ou bette. Retour 3 ans.",engrais_verts:"Moutarde après récolte.",notes:"Graines = glomérules (2-3 graines). Démarier impérativement.",methode:"Méthode Gressent : semer en place et éclaircir. La rouge noire demi-longue est la vraie betterave de table. Bonne conservation à la cave dans le sable pour l'hiver.",gressent:"Variétés anciennes (Gressent, 1869) : Rouge noire demi-longue (la vraie betterave de table, pour le Nord/Est/Ouest), Rouge noire plate d'Égypte (la meilleure de table), Crapaudine (excellente en salade), Rouge ronde hâtive."},
+  {id:"bette",type:"legume",nom:"Bette / Blette",icon:"🥬",famille:"Chénopodiacée",latin:"Beta vulgaris var. cicla",espacement:"25×40cm",profondeur:"2cm",exposition:"Soleil ou mi-ombre",sol:"Riche, frais",ph:"6–7.5",semis_int:[3,4],semis_ext:[4,5,6,8],recolte:[6,7,8,9,10,11],bons_forts:["Chou","Haricot","Oignon"],bons_moy:["Laitue","Radis","Navet"],bons_faibles:["Tomate","Céleri"],mauvais_forts:["Betterave","Épinard"],mauvais_moy:[],mauvais_faibles:[],guilde:"Grandes feuilles ombragent le sol. Plante de résilience, productive de juin à novembre sans replantation.",bec_hellouin:"Légume de résilience. Idéal pour potagers en temps limité.",rotation:"Après légumineuses. Jamais après betterave ou épinard. Retour 3 ans.",engrais_verts:"Phacélie après dernière coupe.",notes:"Variétés Bright Lights très décoratives. Résiste au gel léger."},
+  {id:"carotte",type:"legume",nom:"Carotte",icon:"🥕",famille:"Apiacée",latin:"Daucus carota",espacement:"5×20cm",profondeur:"1cm",exposition:"Plein soleil",sol:"Profond, meuble, sableux",ph:"6–7",semis_int:[],semis_ext:[3,4,5,6,7],recolte:[6,7,8,9,10],bons_forts:["Oignon","Poireau","Ciboulette","Ail","Sauge"],bons_moy:["Laitue","Radis","Tomate","Romarin"],bons_faibles:["Persil","Épinard"],mauvais_forts:["Fenouil","Aneth"],mauvais_moy:["Panais"],mauvais_faibles:[],guilde:"Guilde carotte–oignon–persil : odeurs perturbent les mouches respectives. Ciboulette ou ail en bordure.",bec_hellouin:"Semer dense (3–5cm). Technique PPAM : semis en bandes 15cm. En Lozère, variétés courtes sur sol caillouteux.",rotation:"Après légumineuses. Jamais après persil, panais, céleri. Retour 4 ans.",engrais_verts:"Trèfle incarnat en intercalaire. Phacélie après récolte tardive.",notes:"Sol argileux Lozère : travailler 30cm ou variétés courtes (Chantenay). Semis sous voile N17 contre la mouche.",methode:"Méthode Gressent : ne jamais semer de salades dans les planches de carottes (réduit de moitié la récolte). Éclaircir dès la levée, repiquer dans les places vides. Récolter les plus grosses en premier pour laisser grossir le reste. Semis d'août couvert de litière par fortes gelées = carottes nouvelles tout l'hiver en pleine terre, sans châssis.",gressent:"Variétés anciennes (Gressent, 1869) : Rouge courte de Hollande (hâtive, productive), Demi-longue Nantaise (qualité hors ligne, garde d'hiver), Demi-longue de Luc (hâtive, bonne garde), Demi-courte de Guérande (obtuse, très productive), Rouge longue obtuse sans cœur (excellente)."},
+  {id:"celeri",type:"legume",nom:"Céleri",icon:"🥬",famille:"Apiacée",latin:"Apium graveolens",espacement:"25×30cm",profondeur:"—",exposition:"Soleil, tolère mi-ombre",sol:"Riche, humide, humifère",ph:"6–7",semis_int:[2,3,4],semis_ext:[],recolte:[8,9,10,11],bons_forts:["Chou","Tomate","Poireau","Haricot"],bons_moy:["Épinard","Laitue","Betterave"],bons_faibles:["Oignon"],mauvais_forts:["Maïs","Pomme de terre"],mauvais_moy:["Panais","Carotte"],mauvais_faibles:[],guilde:"Le céleri repousse la piéride du chou. Guilde : chou + céleri + poireau.",bec_hellouin:"Associé systématiquement aux choux. Semis godets février-mars, en place mai.",rotation:"Après légumineuses. Jamais après carotte ou panais. Retour 4 ans.",engrais_verts:"Moutarde après récolte.",notes:"Céleri-branche plus facile que céleri-rave. Irrigation indispensable en été.",methode:"Méthode Gressent : semis sur couche puis repiquage. Buttage progressif (ou liage) pour blanchir les côtes et les rendre tendres. Le céleri-rave hâtif donne les meilleurs tubercules. Culture exigeante en eau.",gressent:"Variétés anciennes (Gressent, 1869) : Plein blanc doré (hâtif), Plein blanc court hâtif, Monstrueux (jamais creux), de Tours (rustique, centre/midi) ; céleri-rave hâtif et ravelisse de Paris."},
+  {id:"chou",type:"legume",nom:"Chou",icon:"🥦",famille:"Brassicacée",latin:"Brassica oleracea",espacement:"40–60×50cm",profondeur:"—",exposition:"Plein soleil",sol:"Riche, frais, calcaire",ph:"6.5–7.5",semis_int:[2,3,4,6,7],semis_ext:[4,5,6,7],recolte:[6,7,8,9,10,11,12],bons_forts:["Céleri","Oignon","Salade","Thym","Romarin","Hysope"],bons_moy:["Betterave","Épinard","Ail","Menthe"],bons_faibles:["Radis","Navet"],mauvais_forts:["Fenouil"],mauvais_moy:["Poivron","Pomme de terre"],mauvais_faibles:[],guilde:"Guilde du chou : céleri + sauge + thym + hysope. Tagète en bordure contre aleurodes.",bec_hellouin:"Rotation stricte. Filets anti-insectes quasi-obligatoires. Choux d'hiver très adaptés en Lozère.",rotation:"Après légumineuses impérativement. Jamais deux de suite. Retour 4 ans.",engrais_verts:"Trèfle blanc ou vesce après récolte.",notes:"En Lozère : kale, chou de Milan, chou frisé excellents. Chauler si pH < 6.5.",methode:"Méthode Gressent : semis en pépinière puis repiquage en place. Échelonner les variétés (cabus hâtifs, Milan rustiques, choux de Bruxelles d'hiver) pour récolter presque toute l'année. Les choux de Milan de Pontoise et des Vertus résistent le mieux au froid.",gressent:"Variétés anciennes (Gressent, 1869) : Cabus préfin (le plus hâtif), Cabus cœur-de-bœuf, Milan des Vertus, Milan de Pontoise (rustique nord), Milan nain d'Ulm, Cabus rouge gros ; chou de Bruxelles pour l'hiver."},
+  {id:"concombre",type:"legume",nom:"Concombre",icon:"🥒",famille:"Cucurbitacée",latin:"Cucumis sativus",espacement:"40×80cm",profondeur:"2cm",exposition:"Plein soleil",sol:"Riche, humifère, bien drainé",ph:"6–7",semis_int:[4,5],semis_ext:[],recolte:[7,8,9],bons_forts:["Haricot","Pois","Radis","Aneth","Tournesol"],bons_moy:["Laitue","Céleri","Chou"],bons_faibles:["Maïs","Épinard"],mauvais_forts:["Pomme de terre","Fenouil"],mauvais_moy:["Melon","Tomate"],mauvais_faibles:[],guilde:"Concombre + haricots grimpants. Radis en bordure repoussent les altises.",bec_hellouin:"Palissage vertical. Arrosage au pied strict (mildiou). Sous abri ou tunnel.",rotation:"Après légumineuses. Jamais après melon, courge, potiron. Retour 3 ans.",engrais_verts:"Vesce-avoine après arrachage.",notes:"Variétés résistantes oïdium : Marketmore. Démarrer sous abri en Lozère.",methode:"Méthode Gressent : semis sur couche ou sur poquets. Cultiver plusieurs variétés pour étaler (vert long épineux précoce sous châssis, à cornichons pour les conserves). [Culture sur couche aujourd'hui remplacée par tunnel.]",gressent:"Variétés anciennes (Gressent, 1869) : Vert long épineux (le plus hâtif sous châssis), Blanc hâtif (sur couche), Blanc de Bonneuil (énorme), à Cornichons vert de Paris (pour la provision de cornichons)."},
+  {id:"courge",type:"legume",nom:"Courge / Potiron",icon:"🎃",famille:"Cucurbitacée",latin:"Cucurbita maxima",espacement:"100–150×150cm",profondeur:"2cm",exposition:"Plein soleil",sol:"Très riche, humifère",ph:"6–7",semis_int:[4,5],semis_ext:[],recolte:[9,10,11],bons_forts:["Maïs","Haricot grimpant","Capucine","Radis"],bons_moy:["Tournesol","Aneth"],bons_faibles:["Laitue","Épinard"],mauvais_forts:["Pomme de terre","Concombre","Fenouil"],mauvais_moy:["Betterave","Melon"],mauvais_faibles:[],guilde:"Les Trois Sœurs : maïs (tuteur) + haricot grimpant (azote) + courge (couvre-sol). Capucine en bordure.",bec_hellouin:"Trois Sœurs centrale au Bec Hellouin. En Lozère : variétés précoces (Potimarron Hokkaido).",rotation:"Après légumineuses. Jamais après concombre ou melon. Retour 3 ans.",engrais_verts:"Feuilles laissées sur place (compostage in situ).",notes:"Installer sur buttes de compost. Variétés précoces pour l'été court en Lozère.",gressent:"Variétés anciennes (Gressent, 1869) : Giraumont turban (la meilleure, tous climats), Giraumont courge de l'Ohio (finesse incomparable), Potiron vert d'Espagne (qualité supérieure au jaune)."},
+  {id:"courgette",type:"legume",nom:"Courgette",icon:"🥬",famille:"Cucurbitacée",latin:"Cucurbita pepo",espacement:"60×100cm",profondeur:"2cm",exposition:"Plein soleil",sol:"Riche, humifère",ph:"6–7",semis_int:[4,5],semis_ext:[],recolte:[6,7,8,9,10],bons_forts:["Haricot","Maïs","Capucine","Œillet d'Inde"],bons_moy:["Radis","Aneth","Tournesol","Laitue"],bons_faibles:["Épinard","Oignon"],mauvais_forts:["Pomme de terre","Fenouil"],mauvais_moy:["Concombre","Melon"],mauvais_faibles:[],guilde:"Capucine attire les pucerons (plante-piège). Aneth attire les prédateurs de pucerons.",bec_hellouin:"2 pieds suffisent pour une famille. Récolter petit (15cm). Variétés : Diamant, Black Beauty.",rotation:"Après légumineuses. Jamais après courge ou concombre. Retour 3 ans.",engrais_verts:"Phacélie après arrachage.",notes:"Surveiller l'oïdium en fin d'été. Variétés résistantes ou bicarbonate de soude dilué."},
+  {id:"cresson",type:"legume",nom:"Cresson",icon:"☘️",famille:"Brassicacée",latin:"Nasturtium officinale",espacement:"10×20cm",profondeur:"surface",exposition:"Mi-ombre à ombre",sol:"Frais à humide",ph:"7–8",semis_int:[],semis_ext:[3,4,5,8,9],recolte:[4,5,6,7,8,9,10],bons_forts:["Menthe","Cerfeuil"],bons_moy:["Radis","Épinard"],bons_faibles:["Laitue"],mauvais_forts:[],mauvais_moy:["Fenouil"],mauvais_faibles:[],guilde:"Valorise les zones humides. Comestible et médicinale.",bec_hellouin:"En bordure de mares ou fossés. Auto-entretien.",rotation:"Culture permanente possible.",engrais_verts:"Non nécessaire.",notes:"Zones humides nombreuses en Lozère. Rincer avant consommation.",gressent:"Variétés anciennes (Gressent, 1869) : Cresson alénois frisé (fourniture pour salades), Cresson de jardin (même saveur que le cresson de fontaine, en bordures)."},
+  {id:"echalote",type:"legume",nom:"Échalote",icon:"🧅",famille:"Alliacée",latin:"Allium cepa var. aggregatum",espacement:"10×20cm",profondeur:"bulbe à fleur de sol",exposition:"Plein soleil",sol:"Léger, bien drainé",ph:"6–7",semis_int:[],semis_ext:[2,3,10,11],recolte:[6,7],bons_forts:["Carotte","Tomate","Betterave","Fraise"],bons_moy:["Laitue","Épinard","Chou"],bons_faibles:["Persil"],mauvais_forts:["Pois","Haricot"],mauvais_moy:["Ail","Oignon"],mauvais_faibles:[],guilde:"Excellent en bordure des fraisiers (répulse limaces et araignées rouges).",bec_hellouin:"Plantation en grappes en bordure des planches.",rotation:"Après légumineuses. Éviter après ail ou oignon. Retour 3 ans.",engrais_verts:"Phacélie ou sarrasin après récolte.",notes:"Tresser et conserver à l'abri. Plantation automnale pour récolte précoce.",gressent:"Variétés anciennes (Gressent, 1869) : de Jersey (la meilleure de toutes)."},
+  {id:"epinard",type:"legume",nom:"Épinard",icon:"🥬",famille:"Chénopodiacée",latin:"Spinacia oleracea",espacement:"10×20cm",profondeur:"1–2cm",exposition:"Mi-ombre, tolère le froid",sol:"Riche, frais, humifère",ph:"6.5–7.5",semis_int:[2,3],semis_ext:[3,4,8,9,10],recolte:[4,5,6,9,10,11],bons_forts:["Fraise","Haricot","Chou","Pois"],bons_moy:["Laitue","Céleri","Radis"],bons_faibles:["Carotte","Oignon"],mauvais_forts:["Betterave","Bette"],mauvais_moy:[],mauvais_faibles:[],guilde:"Excellent couvre-sol pour cultures hautes. Semer dense sous tomates ou haricots.",bec_hellouin:"Légume de transition entre deux saisons. Monte à graine rapidement en été.",rotation:"Jamais après betterave ou bette. Retour 2–3 ans.",engrais_verts:"Trèfle nain après récolte.",notes:"Variétés résistantes montaison : Monstrueux de Viroflay, Matador.",methode:"Méthode Gressent : semer en pleine terre, choisir des variétés lentes à monter (Viroflay, lent à monter) pour prolonger la récolte. La tétragone peut le remplacer dans les régions chaudes et sèches où l'épinard vient mal.",gressent:"Variétés anciennes (Gressent, 1869) : Monstrueux de Viroflay (produit énorme), Lent à monter, à Feuilles de laitue (sauf midi), de Flandre (nord et est), Rond (climats tempérés)."},
+  {id:"fenouil",type:"legume",nom:"Fenouil",icon:"🌿",famille:"Apiacée",latin:"Foeniculum vulgare",espacement:"30×40cm",profondeur:"0.5cm",exposition:"Plein soleil",sol:"Léger, bien drainé",ph:"6–8",semis_int:[],semis_ext:[4,5,6,7],recolte:[8,9,10],bons_forts:[],bons_moy:[],bons_faibles:["Radis (à distance)"],mauvais_forts:["Tomate","Haricot","Pois","Chou","Aubergine","Poivron"],mauvais_moy:["Carotte","Concombre","Courge","Courgette"],mauvais_faibles:[],guilde:"⚠ ISOLER ABSOLUMENT. Émet des composés allélopathiques inhibant la plupart des légumes.",bec_hellouin:"Strictement isolé au Bec Hellouin. Excellent pour attirer les insectes auxiliaires.",rotation:"À isoler structurellement.",engrais_verts:"Non applicable.",notes:"Ne pas confondre fenouil légume et aromatique. Fleurs très attractives pour insectes."},
+  {id:"feve",type:"legume",nom:"Fève",icon:"🫘",famille:"Fabacée",latin:"Vicia faba",espacement:"20×30cm",profondeur:"5cm",exposition:"Plein soleil",sol:"Argilo-limoneux, humide",ph:"6–7.5",semis_int:[],semis_ext:[10,11,2,3],recolte:[5,6,7],bons_forts:["Pomme de terre","Épinard","Chou","Laitue"],bons_moy:["Carotte","Céleri","Maïs"],bons_faibles:["Sauge","Romarin"],mauvais_forts:["Oignon","Ail","Échalote","Poireau","Fenouil"],mauvais_moy:["Betterave"],mauvais_faibles:[],guilde:"Fixatrice d'azote. Guilde : fève + sauge (répulse pucerons noirs). Ne pas arracher : couper au sol.",bec_hellouin:"Plante-clé de la rotation. Semis d'automne en Lozère pour récolte précoce en juin.",rotation:"En tête de rotation. Jamais après autre légumineuse.",engrais_verts:"Elle-même si enfouie avant floraison.",notes:"Pincer les extrémités à l'apparition des premiers boutons (pucerons noirs).",gressent:"Variétés anciennes (Gressent, 1869) : de Séville (très hâtive, fertile, longues cosses), de Marais (grosse, pour le nord), Naines vertes de Beck (hâtive, jusqu'en juin), Naines à châssis (culture forcée)."},
+  {id:"haricot",type:"legume",nom:"Haricot",icon:"🫘",famille:"Fabacée",latin:"Phaseolus vulgaris",espacement:"10×40cm",profondeur:"3–4cm",exposition:"Plein soleil",sol:"Léger, bien drainé",ph:"6–7",semis_int:[],semis_ext:[5,6,7],recolte:[7,8,9,10],bons_forts:["Carotte","Chou","Concombre","Maïs","Courge","Betterave"],bons_moy:["Laitue","Céleri","Radis"],bons_faibles:["Tomate","Pomme de terre"],mauvais_forts:["Oignon","Échalote","Ail","Poireau","Fenouil"],mauvais_moy:["Pois"],mauvais_faibles:[],guilde:"Fixateur d'azote. Grimpant : tuteur maïs (Trois Sœurs). Nain : intercalaire carottes ou choux.",bec_hellouin:"Plusieurs variétés pour étaler la récolte. Conservation en grains secs pour l'hiver.",rotation:"En tête ou milieu. Après haricot : légumes-feuilles ou fruits.",engrais_verts:"Ne pas arracher : couper au sol.",notes:"En Lozère attendre mi-mai. Variétés : Contender (nain), Fortex (grimpant).",methode:"Méthode Gressent : ne semer qu'après tout risque de gel (plante très sensible au froid). Les variétés naines ne demandent pas de rames ; les grimpantes (Soissons, Sabre) sont les meilleures pour les grains secs. Échelonner les semis jusqu'en juin pour étaler la récolte.",gressent:"Variétés anciennes (Gressent, 1869) : Flageolet d'Étampes (le plus précoce nain), Flageolet de Paris, Soissons à rames (gros, à écosser), Sabre (le meilleur en grains secs), Beurre noir et beurre blanc (mange-tout)."},
+  {id:"laitue",type:"legume",nom:"Laitue / Salade",icon:"🥬",famille:"Astéracée",latin:"Lactuca sativa",espacement:"20×25cm",profondeur:"0.3cm",exposition:"Soleil ou mi-ombre",sol:"Frais, humifère, bien drainé",ph:"6–7",semis_int:[2,3,4,8,9],semis_ext:[3,4,5,6,7,8,9],recolte:[4,5,6,7,8,9,10,11],bons_forts:["Carotte","Radis","Fraise","Chou","Concombre"],bons_moy:["Tomate","Oignon","Épinard","Haricot","Betterave"],bons_faibles:["Courgette","Céleri"],mauvais_forts:[],mauvais_moy:["Fenouil","Persil"],mauvais_faibles:[],guilde:"Légume de remplissage universel. Couvre le sol, limite les adventices.",bec_hellouin:"Semis succession toutes les 2–3 semaines. Technique 'couper-revenir' sur batavia.",rotation:"Éviter après chicorée. Retour 2 ans.",engrais_verts:"Non nécessaire.",notes:"Variétés résistantes chaleur : Batavia, Reine de Mai.",methode:"Méthode Gressent : semer en succession et repiquer. Choisir les variétés selon la saison : Gotte au printemps, Merveille des quatre saisons et Batavia l'été, variétés d'hiver rustiques (Passion, grosse brune) pour passer la mauvaise saison. Les romaines se lient pour blanchir le cœur.",gressent:"Variétés anciennes (Gressent, 1869) : Gotte de printemps (pomme vite), Merveille des quatre saisons (très rustique), Batavia (verte dorée), Grosse blonde paresseuse ; Romaines : verte maraîchère, blonde maraîchère, verte d'hiver (rustique)."},
+  {id:"mache",type:"legume",nom:"Mâche",icon:"🥗",famille:"Valérianacée",latin:"Valerianella locusta",espacement:"5×10cm",profondeur:"0.5cm",exposition:"Mi-ombre, résiste au gel fort",sol:"Ordinaire, même pauvre",ph:"6–7",semis_int:[],semis_ext:[8,9,10],recolte:[11,12,1,2,3,4],bons_forts:["Radis","Épinard","Chou"],bons_moy:["Laitue","Carotte"],bons_faibles:["Betterave"],mauvais_forts:[],mauvais_moy:["Maïs"],mauvais_faibles:[],guilde:"Légume d'hiver couvre-sol. S'installe souvent seule par semis spontané.",bec_hellouin:"Semée en fin d'été entre légumes d'automne. Auto-ressème facilement.",rotation:"Non exigeante.",engrais_verts:"Non nécessaire.",notes:"Résiste à -15°C sous neige. Récolter feuille à feuille.",gressent:"Variétés anciennes (Gressent, 1869) : à Feuilles de laitue (la meilleure pour le jardin du propriétaire), Verte à cœur plein (belles touffes pommées), Ronde à grosse graine."},
+  {id:"mais",type:"legume",nom:"Maïs",icon:"🌽",famille:"Poacée",latin:"Zea mays",espacement:"30×60cm",profondeur:"3–4cm",exposition:"Plein soleil, chaud",sol:"Riche, profond, bien drainé",ph:"6–7",semis_int:[4,5],semis_ext:[],recolte:[8,9],bons_forts:["Haricot grimpant","Courge","Potimarron","Concombre"],bons_moy:["Courgette","Tomate"],bons_faibles:["Épinard"],mauvais_forts:["Betterave","Céleri"],mauvais_moy:["Mâche"],mauvais_faibles:[],guilde:"Pilier des Trois Sœurs. Planter en bloc (pollinisation croisée).",bec_hellouin:"Association Trois Sœurs systématique. Variétés précoces pour Lozère.",rotation:"Après légumineuses. Très gourmand en azote. Jamais deux de suite.",engrais_verts:"Trèfle ou vesce en intercalaire à partir de mi-été.",notes:"Variétés précoces : Early Xtra Sweet. Semis sous abri en avril."},
+  {id:"melon",type:"legume",nom:"Melon",icon:"🍈",famille:"Cucurbitacée",latin:"Cucumis melo",espacement:"60×100cm",profondeur:"1cm",exposition:"Plein soleil, chaleur",sol:"Riche, bien drainé, chaud",ph:"6–7",semis_int:[4,5],semis_ext:[],recolte:[8,9],bons_forts:["Maïs","Haricot","Radis"],bons_moy:["Tournesol","Laitue"],bons_faibles:["Capucine"],mauvais_forts:["Pomme de terre","Fenouil","Concombre"],mauvais_moy:["Courgette","Courge"],mauvais_faibles:[],guilde:"Guilde Trois Sœurs allégée : maïs + haricot + melon.",bec_hellouin:"Sous tunnel en Normandie. En Lozère : versant sud sur buttes de compost.",rotation:"Après légumineuses. Jamais après concombre, courge. Retour 3 ans.",engrais_verts:"Phacélie après arrachage.",notes:"Variétés précoces : Alvaro F1, Petit Gris de Rennes.",methode:"Méthode Gressent : culture exigeante (semis sur couche chaude, repiquage, taille soignée). Tailler pour limiter le nombre de fruits et concentrer la sève. ⚠️ Méthode très liée aux couches chaudes parisiennes — aujourd'hui, préférer tunnel/serre et variétés précoces en Lozère.",gressent:"Variétés anciennes (Gressent, 1869) : Melon Gressent (chair très rouge, rustique), Cantaloup superfin Gressent (écorce rugueuse, chair foncée), Cantaloup d'Alger (gros, rustique), de Cavaillon."},
+  {id:"navet",type:"legume",nom:"Navet",icon:"⚪",famille:"Brassicacée",latin:"Brassica rapa",espacement:"10×20cm",profondeur:"0.5cm",exposition:"Soleil ou mi-ombre",sol:"Meuble, frais, humifère",ph:"6–7",semis_int:[],semis_ext:[3,4,7,8,9],recolte:[5,6,9,10,11],bons_forts:["Pois","Haricot","Épinard"],bons_moy:["Laitue","Betterave","Bette"],bons_faibles:["Radis","Chou"],mauvais_forts:["Fenouil"],mauvais_moy:["Pomme de terre","Oignon"],mauvais_faibles:[],guilde:"Légume rapide (50–60 jours) pour combler les espaces.",bec_hellouin:"Semé en succession. Variété de Croissy appréciée pour sa précocité.",rotation:"Après légumineuses. Jamais après brassicacée. Retour 3 ans.",engrais_verts:"Phacélie ou trèfle après récolte.",notes:"Semis fin août → navets récoltables en novembre.",methode:"Méthode Gressent : semer après une récolte de carottes hâtives ou de salades. ⚠️ Les navets d'été sont dévorés par l'altise — la noyer par arrosage copieux et très vif en plein soleil (jeter beaucoup d'eau d'un coup sur toute la planche).",gressent:"Variétés anciennes (Gressent, 1869) : Blanc plat hâtif (le plus précoce), Boule d'or, de Freneuse (reste entier après cuisson), des Vertus race marteau, de Meaux (rustique), Jaune de Hollande (longue garde)."},
+  {id:"oignon",type:"legume",nom:"Oignon",icon:"🧅",famille:"Alliacée",latin:"Allium cepa",espacement:"10×20cm",profondeur:"bulbe à fleur de sol",exposition:"Plein soleil",sol:"Léger, bien drainé",ph:"6–7",semis_int:[1,2,3],semis_ext:[3,4],recolte:[7,8],bons_forts:["Carotte","Betterave","Laitue","Tomate","Fraise"],bons_moy:["Chou","Épinard","Concombre"],bons_faibles:["Persil","Ciboulette"],mauvais_forts:["Pois","Haricot","Fève"],mauvais_moy:["Ail","Échalote"],mauvais_faibles:[],guilde:"Guilde carotte–oignon : protection mutuelle contre les mouches.",bec_hellouin:"Dense plantation en quinconce. Semis très tôt (janvier) pour gros bulbes.",rotation:"Après légumineuses. Jamais après ail ou poireau. Retour 3 ans.",engrais_verts:"Sarrasin ou phacélie après récolte.",notes:"Séchage soigneux. Variétés : Stuttgarter Riesen (conservation), Rouge Amposta.",methode:"Méthode Gressent : terre légère plutôt que forte, et surtout PAS de fumure fraîche (l'oignon la redoute). Semis d'août repiqué en planches avant l'hiver pour de gros bulbes précoces. Bien sécher après récolte pour la conservation.",gressent:"Variétés anciennes (Gressent, 1869) : Jaune des Vertus (la meilleure pour semis de printemps), Jaune de Cambrai (rustique), Blanc hâtif (premiers oignons), Rouge pâle de Niort (longue garde, là où le jaune réussit mal)."},
+  {id:"panais",type:"legume",nom:"Panais",icon:"🥕",famille:"Apiacée",latin:"Pastinaca sativa",espacement:"10×30cm",profondeur:"1cm",exposition:"Plein soleil",sol:"Profond, meuble, sans pierres",ph:"6–7",semis_int:[],semis_ext:[3,4,5],recolte:[10,11,12,1,2],bons_forts:["Pois","Haricot","Radis"],bons_moy:["Oignon","Laitue","Épinard"],bons_faibles:["Chou"],mauvais_forts:["Carotte","Fenouil","Aneth","Céleri"],mauvais_moy:["Persil"],mauvais_faibles:[],guilde:"Excellent légume d'hiver en Lozère. Ombelles très attractives pour insectes bénéfiques.",bec_hellouin:"Laissé en terre jusqu'aux gelées (sucrent le panais). Semis dense sans démariage.",rotation:"Après légumineuses. Jamais après carotte ou céleri. Retour 4 ans.",engrais_verts:"Phacélie après récolte printanière.",notes:"Germination lente (3–4 sem). Graines fraîches obligatoires. Laisser en terre tout l'hiver.",methode:"Méthode Gressent : semer au printemps en terre profonde. Le panais rond convient au potager du propriétaire, le demi-long de Guernesey aux terres sèches. Très rustique, se conserve en terre tout l'hiver.",gressent:"Variétés anciennes (Gressent, 1869) : Rond (la meilleure pour le potager du propriétaire), Demi-long de Guernesey (tous climats, terres sèches), Patate violette (la plus recherchée pour châssis)."},
+  {id:"poireau",type:"legume",nom:"Poireau",icon:"🥬",famille:"Alliacée",latin:"Allium ampeloprasum",espacement:"10×25cm",profondeur:"15cm (trou)",exposition:"Plein soleil",sol:"Riche, profond, frais",ph:"6.5–7.5",semis_int:[1,2,3],semis_ext:[3,4],recolte:[9,10,11,12,1,2,3],bons_forts:["Carotte","Céleri","Tomate"],bons_moy:["Betterave","Laitue","Épinard","Chou"],bons_faibles:["Persil"],mauvais_forts:["Pois","Haricot","Fève"],mauvais_moy:["Ail","Oignon","Échalote"],mauvais_faibles:[],guilde:"Guilde poireau–carotte–céleri très efficace. Racines profondes aèrent le sol.",bec_hellouin:"Associé aux carottes en alternance. Variétés d'hiver : Monstrueux de Carentan, Bleu de Solaise.",rotation:"Après légumineuses. Jamais après oignon ou ail. Retour 3 ans.",engrais_verts:"Trèfle blanc après récolte printanière.",notes:"Résiste à -15°C. Buttage progressif pour blanchir.",methode:"Méthode Gressent : choisir des variétés à long fût blanc (Carentan, Rouen). Semer au printemps puis en juin-juillet pour étaler. Le repiquage en trou profond (puis buttage progressif) allonge et blanchit le fût. La variété de Rouen monte difficilement à graine et reste bonne très longtemps au printemps.",gressent:"Variétés anciennes (Gressent, 1869) : Monstrueux de Carentan (le plus gros), du Poitou (centre et midi), de Rouen (nord, est, ouest), Long d'hiver (très rustique)."},
+  {id:"pois",type:"legume",nom:"Pois",icon:"🫛",famille:"Fabacée",latin:"Pisum sativum",espacement:"5×20cm",profondeur:"4–5cm",exposition:"Soleil à mi-ombre",sol:"Frais, bien drainé",ph:"6–7.5",semis_int:[],semis_ext:[2,3,4,10,11],recolte:[5,6,7],bons_forts:["Carotte","Navet","Radis","Épinard","Laitue","Concombre"],bons_moy:["Chou","Betterave","Courgette","Maïs"],bons_faibles:["Céleri","Cerfeuil"],mauvais_forts:["Oignon","Ail","Échalote","Poireau","Fenouil"],mauvais_moy:["Haricot"],mauvais_faibles:[],guilde:"Fixateur d'azote de printemps. Associer aux carottes et laitues.",bec_hellouin:"Semé dès février sur filets. Arrachage juillet, sol enrichi pour culture suivante.",rotation:"En tête de rotation. Après pois : légumes-fruits ou feuilles exigeants.",engrais_verts:"Ne pas arracher — couper au sol, laisser les racines nodulées.",notes:"En Lozère dès fin février (terrain ressuyé). Variétés naines pour espaces réduits.",methode:"Méthode Gressent : semer les plus précoces (Prince Albert, Quarantain) dès que possible, puis échelonner avec des variétés plus tardives (de Clamart). Les variétés à rames sont plus productives que les naines mais demandent un support. Protéger les semis des rats et mulots.",gressent:"Variétés anciennes (Gressent, 1869) : Prince Albert (le plus précoce), Express, Quarantain (précoce par excellence), Merveille d'Amérique (ridé nain), de Clamart tardif, Corne de bélier (mange-tout)."},
+  {id:"poivron",type:"legume",nom:"Poivron / Piment",icon:"🫑",famille:"Solanacée",latin:"Capsicum annuum",espacement:"40×50cm",profondeur:"—",exposition:"Plein soleil, chaud",sol:"Riche, bien drainé, chaud",ph:"6–7",semis_int:[2,3],semis_ext:[],recolte:[8,9,10],bons_forts:["Basilic","Tomate","Aubergine","Carotte"],bons_moy:["Oignon","Thym"],bons_faibles:["Persil","Ciboulette"],mauvais_forts:["Fenouil","Chou"],mauvais_moy:["Pomme de terre"],mauvais_faibles:[],guilde:"Guilde méditerranéenne : basilic éloigne les pucerons. Tagète contre nématodes.",bec_hellouin:"Sous abri en Normandie. En Lozère tunnel possible. Variétés précoces : Corno di Toro.",rotation:"Après légumineuses. Jamais après tomate ou aubergine. Retour 4 ans.",engrais_verts:"Vesce-avoine après arrachage.",notes:"Semer en février à 20°C minimum.",gressent:"Variétés anciennes (Gressent, 1869, sous 'Piment') : de Cayenne (le meilleur pour assaisonnements), Cerise (joli, bonne qualité), Carré doux (gros et plus doux)."},
+  {id:"pomme_de_terre",type:"legume",nom:"Pomme de terre",icon:"🥔",famille:"Solanacée",latin:"Solanum tuberosum",espacement:"30×70cm",profondeur:"10–15cm",exposition:"Plein soleil",sol:"Profond, ameubli, acide",ph:"5–6.5",semis_int:[],semis_ext:[4,5],recolte:[7,8,9],bons_forts:["Haricot","Chou","Maïs","Raifort"],bons_moy:["Coriandre","Capucine","Thym"],bons_faibles:["Épinard","Laitue"],mauvais_forts:["Tomate","Aubergine","Poivron","Fenouil","Concombre"],mauvais_moy:["Tournesol"],mauvais_faibles:[],guilde:"Raifort en bordure contre le mildiou (remède traditionnel). Haricot fixe l'azote.",bec_hellouin:"Cultivation en billons. Buttage systématique. Défriche les nouvelles parcelles.",rotation:"Après légumineuses. Jamais après tomate ou aubergine. Retour 4 ans.",engrais_verts:"Moutarde ou radis fodder après récolte.",notes:"Mildiou fréquent en Lozère. Variétés résistantes : Sarpo Mira, Sarpo Axona.",methode:"Méthode Gressent : faire germer les tubercules avant plantation (planter germées). Variétés précoces à feuilles d'orties ou Royale Kidney sous châssis ou en pleine terre dès que le sol se réchauffe. Buttage pour les variétés de saison.",gressent:"Variétés anciennes (Gressent, 1869) : Précoce à feuilles d'orties (la meilleure hâtive), Marjolain quarantaine, Royale Kidney, Jaune de Hollande (de saison), Saucisse rouge longue, Merveille d'Amérique (tardive)."},
+  {id:"radis",type:"legume",nom:"Radis",icon:"🔴",famille:"Brassicacée",latin:"Raphanus sativus",espacement:"3×10cm",profondeur:"1cm",exposition:"Soleil ou mi-ombre",sol:"Meuble, frais",ph:"6–7",semis_int:[],semis_ext:[3,4,5,6,7,8,9],recolte:[4,5,6,7,8,9,10],bons_forts:["Laitue","Carotte","Concombre","Haricot","Épinard","Pois"],bons_moy:["Navet","Tomate","Betterave","Chou"],bons_faibles:["Cerfeuil","Ciboulette"],mauvais_forts:["Fenouil"],mauvais_moy:["Pomme de terre"],mauvais_faibles:[],guilde:"Légume intercalaire universel. Repousse les altises des choux.",bec_hellouin:"Semer partout entre les cultures. Culture-signal : si radis ne pousse pas → sol compacté.",rotation:"Non exigeant.",engrais_verts:"Radis fourrager = excellent engrais vert décompactant.",notes:"Radis d'hiver (long noir) en août pour récolte novembre-décembre.",methode:"Méthode Gressent : semer clair et en succession toute la saison. Le radis violet d'hiver (gros comme une betterave) se conserve l'hiver, bien supérieur au radis noir. Arrosage régulier pour éviter le piquant et le creux.",gressent:"Variétés anciennes (Gressent, 1869) : Rond rose hâtif (à cultiver partout), Écarlate (demi-long, piquant), Rose bout blanc (rond et demi-long), Blanc rond hâtif, Violet d'hiver (supérieur au radis noir)."},
+  {id:"roquette",type:"legume",nom:"Roquette",icon:"🥗",famille:"Brassicacée",latin:"Eruca vesicaria",espacement:"10×20cm",profondeur:"0.3cm",exposition:"Soleil ou mi-ombre",sol:"Ordinaire, frais",ph:"6–7",semis_int:[],semis_ext:[3,4,5,8,9,10],recolte:[4,5,6,9,10,11],bons_forts:["Laitue","Épinard","Radis"],bons_moy:["Carotte","Haricot"],bons_faibles:["Tomate"],mauvais_forts:[],mauvais_moy:["Fenouil"],mauvais_faibles:[],guilde:"Légume de remplissage rapide. Se ressème facilement.",bec_hellouin:"Semée en continu entre les rangées. Monte vite à graine en été.",rotation:"Non exigeante.",engrais_verts:"Non nécessaire.",notes:"Variété sauvage (Diplotaxis tenuifolia) plus rustique et aromatique."},
+  {id:"tomate",type:"legume",nom:"Tomate",icon:"🍅",famille:"Solanacée",latin:"Solanum lycopersicum",espacement:"50–60×80cm",profondeur:"—",exposition:"Plein soleil, abri du vent",sol:"Riche, humifère, bien drainé",ph:"6–7",semis_int:[2,3,4],semis_ext:[],recolte:[7,8,9,10],bons_forts:["Basilic","Ciboulette","Ail","Persil","Carotte","Œillet d'Inde"],bons_moy:["Poireau","Céleri","Épinard","Laitue","Bourrache"],bons_faibles:["Haricot","Aubergine"],mauvais_forts:["Fenouil","Pomme de terre"],mauvais_moy:["Concombre","Maïs"],mauvais_faibles:[],guilde:"Guilde tomate (Bec Hellouin) : tomate + basilic + ciboulette + bourrache + œillet d'Inde. Sous les pieds : laitue.",bec_hellouin:"Guilde emblématique du Bec Hellouin. Palissage vertical. Ébourgeonnage systématique. En Lozère : tunnel contre mildiou.",rotation:"Après légumineuses. Jamais après pomme de terre. Retour 4 ans.",engrais_verts:"Vesce ou moutarde après arrachage.",notes:"Variétés résistantes mildiou : Fantasio F1, Ferline. Population : Andine cornue, Cœur de bœuf.",methode:"Méthode Gressent : repiquages successifs en pépinière (2–3 fois, à distance croissante) pour empêcher la plante de filer en feuilles et hâter la fructification. Palissage sur 3 fils de fer tendus (à 20, 50 et 80 cm), comme une vigne. Taille à 3–4 branches garnies de fruits, puis pincement de l'extrémité — toute la sève profite aux fruits noués. Astuce : planter les tomates au bord nord des couches de melon, elles servent d'abri et éloignent les insectes par leur odeur. [Le forçage sur couche chaude est aujourd'hui remplacé par serre/tunnel.]",gressent:"Variétés anciennes (Gressent, 1869) : Naine très hâtive (la plus précoce), Hâtive à feuilles crispées (très fertile), Perfectionnée de Ledran (la plus grosse et lisse, hâtive), Mikado monstrueuse (tardive, fruits énormes)."},
+  {id:"ciboulette",type:"aromatique",nom:"Ciboulette",icon:"🌿",famille:"Alliacée",latin:"Allium schoenoprasum",espacement:"20×20cm",profondeur:"0.5cm",exposition:"Soleil ou mi-ombre",sol:"Ordinaire, frais",ph:"6–7",semis_int:[2,3],semis_ext:[4,5],recolte:[4,5,6,7,8,9,10],bons_forts:["Tomate","Carotte","Rose","Pommier"],bons_moy:["Concombre","Betterave","Laitue"],bons_faibles:["Épinard","Radis"],mauvais_forts:["Pois","Haricot","Fève"],mauvais_moy:[],mauvais_faibles:[],guilde:"Plante compagne universelle en bordure. Fleurs attirent pollinisateurs.",bec_hellouin:"Plantée en bordure permanente de toutes les planches légumes-fruits.",rotation:"Plante pérenne.",engrais_verts:"Non applicable.",notes:"Couper régulièrement. Division des touffes en automne.",gressent:"Note Gressent (1869) : appelée civelle ou appétit selon les localités, très utile pour les fournitures de cuisine."},
+  {id:"coriandre",type:"aromatique",nom:"Coriandre",icon:"🌿",famille:"Apiacée",latin:"Coriandrum sativum",espacement:"10×20cm",profondeur:"0.5cm",exposition:"Soleil ou mi-ombre",sol:"Léger, bien drainé",ph:"6–7.5",semis_int:[],semis_ext:[4,5,6,7,8],recolte:[5,6,7,8,9],bons_forts:["Chou","Épinard","Laitue"],bons_moy:["Carotte","Tomate","Poivron"],bons_faibles:["Radis"],mauvais_forts:["Fenouil"],mauvais_moy:[],mauvais_faibles:[],guilde:"Attire une grande diversité d'insectes auxiliaires à la floraison.",bec_hellouin:"Semée en lisière, laissée monter à graine pour auto-ressemis.",rotation:"Culture annuelle. Non exigeante.",engrais_verts:"Non nécessaire.",notes:"Semer toutes les 3 semaines pour production continue de feuilles."},
+  {id:"persil",type:"aromatique",nom:"Persil",icon:"🌿",famille:"Apiacée",latin:"Petroselinum crispum",espacement:"10×20cm",profondeur:"0.5cm",exposition:"Soleil ou mi-ombre",sol:"Riche, frais, humifère",ph:"6–7",semis_int:[2,3],semis_ext:[3,4,5,8],recolte:[5,6,7,8,9,10,11],bons_forts:["Tomate","Rose","Carotte","Asperge"],bons_moy:["Poivron","Chou","Oignon"],bons_faibles:["Laitue","Radis"],mauvais_forts:["Fenouil"],mauvais_moy:["Laitue (grande quantité)"],mauvais_faibles:[],guilde:"Planté sous les tomates ou en bordure des roses. Guilde carotte–oignon–persil classique.",bec_hellouin:"Plante de bordure permanente. Tremper les graines 24h avant semis.",rotation:"Biennal. Éviter après céleri. Retour 3 ans.",engrais_verts:"Non nécessaire.",notes:"Germination lente (3–4 sem). Variétés : Géant d'Italie (plat), Mousse (frisé).",gressent:"Variétés anciennes (Gressent, 1869) : Frisé (à cultiver à l'exclusion de toute autre, beauté des feuilles), à Feuilles de fougère (très grand, vert foncé, touffes énormes)."},
+  {id:"basilic",type:"aromatique",nom:"Basilic",icon:"🌿",famille:"Lamiacée",latin:"Ocimum basilicum",espacement:"20×25cm",profondeur:"0.2cm",exposition:"Plein soleil, chaud",sol:"Léger, bien drainé, chaud",ph:"6–7",semis_int:[3,4,5],semis_ext:[],recolte:[6,7,8,9,10],bons_forts:["Tomate","Poivron","Aubergine"],bons_moy:["Concombre","Courgette"],bons_faibles:["Laitue"],mauvais_forts:["Sauge"],mauvais_moy:[],mauvais_faibles:[],guilde:"La guilde basilic–tomate est la plus connue. Repousse pucerons et aleurodes.",bec_hellouin:"Un pied de basilic par pied de tomate. Pincer régulièrement.",rotation:"Annuelle. Phacélie après.",engrais_verts:"Phacélie.",notes:"Transplanter après Saints de Glace. Sensible au froid. Variétés : Grand Vert, Napoletano."},
+  {id:"thym",type:"aromatique",nom:"Thym",icon:"🌿",famille:"Lamiacée",latin:"Thymus vulgaris",espacement:"25×30cm",profondeur:"0.2cm",exposition:"Plein soleil, sec",sol:"Pauvre, calcaire, très drainé",ph:"6.5–8",semis_int:[3,4],semis_ext:[5],recolte:[5,6,7,8,9,10,11],bons_forts:["Chou","Tomate","Aubergine","Rose"],bons_moy:["Fraise","Courgette","Poivron"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Compagnon universel. Répulse la piéride du chou. Attire pollinisateurs.",bec_hellouin:"Bordure permanente de toutes les planches. Très adapté à Lozère.",rotation:"Plante pérenne.",engrais_verts:"Non applicable.",notes:"Très adapté Lozère (sol calcaire, été sec). Tailler après floraison.",gressent:"Variétés anciennes (Gressent, 1869) : Thym d'hiver (la variété préférable pour cultiver en bordure)."},
+  {id:"sauge",type:"aromatique",nom:"Sauge",icon:"🌿",famille:"Lamiacée",latin:"Salvia officinalis",espacement:"30×40cm",profondeur:"0.3cm",exposition:"Plein soleil, sec",sol:"Pauvre, drainé, calcaire",ph:"6.5–7.5",semis_int:[3,4],semis_ext:[5],recolte:[5,6,7,8,9,10],bons_forts:["Chou","Tomate","Carotte","Fraise"],bons_moy:["Haricot","Fève","Poireau"],bons_faibles:["La plupart des légumes"],mauvais_forts:["Basilic"],mauvais_moy:["Concombre"],mauvais_faibles:[],guilde:"Repousse la mouche du chou et la piéride. Sa transpiration réduit l'humidité ambiante.",bec_hellouin:"Plante structurante des lisières. Utilisée en bordure des grandes planches.",rotation:"Pérenne. Restructurer tous les 3–4 ans.",engrais_verts:"Non applicable.",notes:"Fleurs mauves au printemps attractives pour pollinisateurs."},
+  {id:"menthe",type:"aromatique",nom:"Menthe",icon:"🌿",famille:"Lamiacée",latin:"Mentha spp.",espacement:"30×50cm (contenir!)",profondeur:"rhizome à 5cm",exposition:"Mi-ombre à ombre",sol:"Riche, humide",ph:"6–7",semis_int:[],semis_ext:[],recolte:[5,6,7,8,9,10],bons_forts:["Chou","Tomate","Pois"],bons_moy:["Carotte","Laitue","Radis"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:["Persil","Basilic"],mauvais_faibles:[],guilde:"⚠ INVASIVE : toujours contenir dans un pot enterré. Repousse pucerons, fourmis, mouches.",bec_hellouin:"Contenu obligatoire. Feuilles séchées éloignent les rongeurs des greniers.",rotation:"Pérenne. Remplacer tous les 3–4 ans.",engrais_verts:"Non applicable.",notes:"Planter dans seaux percés enterrés. Espèces : poivrée, verte, pomme (rustique)."},
+  {id:"romarin",type:"aromatique",nom:"Romarin",icon:"🌿",famille:"Lamiacée",latin:"Salvia rosmarinus",espacement:"60×80cm",profondeur:"0.5cm",exposition:"Plein soleil, sec, abrité",sol:"Pauvre, calcaire, très drainé",ph:"7–8.5",semis_int:[3,4],semis_ext:[5],recolte:[1,2,3,4,5,6,7,8,9,10,11,12],bons_forts:["Chou","Carotte","Haricot"],bons_moy:["Tomate","Fraise","Poivron"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:["Concombre"],mauvais_faibles:[],guilde:"Haie aromatique structurante. Repousse un large spectre de ravageurs.",bec_hellouin:"Haie basse permanente autour des parcelles. Plante de structure du jardin-forêt.",rotation:"Pérenne. Vit 20–30 ans.",engrais_verts:"Non applicable.",notes:"Protéger du vent froid du nord en Lozère. Exposition sud contre un muret de pierre."},
+  {id:"aneth",type:"aromatique",nom:"Aneth",icon:"🌿",famille:"Apiacée",latin:"Anethum graveolens",espacement:"15×30cm",profondeur:"0.3cm",exposition:"Plein soleil",sol:"Léger, bien drainé",ph:"5.5–7",semis_int:[],semis_ext:[4,5,6,7],recolte:[6,7,8,9],bons_forts:["Chou","Concombre","Salade","Oignon"],bons_moy:["Haricot","Courgette","Maïs"],bons_faibles:["Radis"],mauvais_forts:["Carotte","Fenouil","Tomate (fleuri)"],mauvais_moy:["Poivron"],mauvais_faibles:[],guilde:"Excellent attracteur d'insectes auxiliaires à la floraison. Auto-ressemis abondant.",bec_hellouin:"Semé en lisière, laissé fleurir.",rotation:"Annuelle. Non exigeante.",engrais_verts:"Non nécessaire.",notes:"L'aneth en fleurs est néfaste pour les tomates. Semer en bordure éloignée."},
+  {id:"cerfeuil",type:"aromatique",nom:"Cerfeuil",icon:"🌿",famille:"Apiacée",latin:"Anthriscus cerefolium",espacement:"10×20cm",profondeur:"0.5cm",exposition:"Mi-ombre",sol:"Frais, humifère",ph:"6–7",semis_int:[],semis_ext:[3,4,8,9],recolte:[4,5,6,9,10,11],bons_forts:["Radis","Laitue","Carotte"],bons_moy:["Épinard","Chou","Poireau"],bons_faibles:["Tomate"],mauvais_forts:["Fenouil"],mauvais_moy:["Carotte (trop proche)"],mauvais_faibles:[],guilde:"Plante de sous-ombre. Fleurs attractives pour insectes bénéfiques.",bec_hellouin:"Semé en automne sous les arbres fruitiers. Monte vite à graine au printemps.",rotation:"Culture courte. Non exigeante.",engrais_verts:"Non nécessaire.",notes:"Utiliser à l'automne et au printemps. Monte vite en été."},
+  {id:"sarriette",type:"aromatique",nom:"Sarriette",icon:"🌿",famille:"Lamiacée",latin:"Satureja hortensis",espacement:"20×30cm",profondeur:"0.2cm",exposition:"Plein soleil",sol:"Pauvre, calcaire, drainé",ph:"6.5–8",semis_int:[3,4],semis_ext:[5],recolte:[6,7,8,9,10],bons_forts:["Haricot","Fève","Oignon"],bons_moy:["Chou","Tomate"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"'L'herbe du haricot' — repousse les pucerons noirs et améliore le goût.",bec_hellouin:"Toujours associée aux haricots et fèves au Bec Hellouin.",rotation:"Vivace (S. montana) ou annuelle.",engrais_verts:"Non applicable.",notes:"Sarriette des montagnes très adaptée à Lozère.",gressent:"Note Gressent (1869) : « plante aromatique à cultiver comme assaisonnement »."},
+  {id:"fraise",type:"fruit",nom:"Fraise",icon:"🍓",famille:"Rosacée",latin:"Fragaria × ananassa",espacement:"25×30cm",profondeur:"collet à niveau",exposition:"Soleil ou mi-ombre légère",sol:"Riche, frais, légèrement acide",ph:"5.5–6.5",semis_int:[],semis_ext:[8,9],recolte:[5,6,7,8,9],bons_forts:["Ail","Oignon","Épinard","Laitue","Thym","Bourrache"],bons_moy:["Ciboulette","Carotte","Radis"],bons_faibles:["Poireau"],mauvais_forts:["Chou","Fenouil","Pomme de terre"],mauvais_moy:["Tomate","Poivron"],mauvais_faibles:[],guilde:"Bourrache repousse les purcilles. Ail et ciboulette repoussent limaces et araignées rouges.",bec_hellouin:"Couvre-sol vivant sous les arbres fruitiers. Très productif à l'ombre partielle.",rotation:"Pérenne 3–4 ans. Déplacer après 4 ans. Ne pas replanter après PDT ou tomate.",engrais_verts:"Trèfle blanc en sous-couvert permanent.",notes:"Excellent climat Lozère pour les fraises. Variétés : Mara des Bois, Charlotte, Gariguette.",methode:"Méthode Gressent : choisir des variétés remontantes et fermes (Vicomtesse Héricart de Thury). Le forçage sous châssis permet des fraises précoces. Renouveler la fraiseraie régulièrement (les vieux pieds dégénèrent).",gressent:"Variétés anciennes (Gressent, 1869) : Vicomtesse Héricart de Thury (hâtive, ferme, sucrée), Princesse Royale (fertile, se force bien), Marguerite Lebreton, Docteur Morère (la plus grosse connue)."},
+  {id:"framboise",type:"fruit",nom:"Framboisier",icon:"🫐",famille:"Rosacée",latin:"Rubus idaeus",espacement:"40–60cm sur rang, 1,5–2m entre rangs",profondeur:"collet à niveau",exposition:"Soleil à mi-ombre (est/sud-est idéal)",sol:"Léger, riche en humus, frais, légèrement acide",ph:"5.5–6.5",semis_int:[],semis_ext:[10,11,2,3],recolte:[6,7,8,9],bons_forts:["Ail","Œillet d'Inde"],bons_moy:["Ciboulette","Tanaisie"],bons_faibles:["Capucine"],mauvais_forts:["Pomme de terre","Tomate"],mauvais_moy:["Fraise (mêmes maladies)"],mauvais_faibles:[],guilde:"Palisser sur fils de fer. L'ail et la tanaisie en pied repoussent les ravageurs. Ne pas planter près des solanacées (verticilliose commune).",bec_hellouin:"Arbuste de lisière dans le jardin-forêt. Variétés remontantes (Héritage, Fall Gold) pour récolte étalée été-automne. Très adapté au climat frais de Lozère.",rotation:"Pérenne (10 ans). Renouveler la framboiseraie tous les 8–10 ans sur un nouvel emplacement.",engrais_verts:"Paillage permanent (BRF, paille) plutôt qu'engrais vert.",notes:"Tailler les cannes à 20cm du collet à la plantation. Remontants : taille des cannes ayant fructifié. Variétés : Héritage (remontant), Zéva, Fall Gold (jaune)."},
+  {id:"cassis",type:"fruit",nom:"Cassissier",icon:"🫐",famille:"Grossulariacée",latin:"Ribes nigrum",espacement:"1,2–1,5m",profondeur:"collet enterré 5cm (favorise les rejets)",exposition:"Ensoleillée (préfère le soleil)",sol:"Frais, profond, riche, neutre à légèrement acide",ph:"6–6.5",semis_int:[],semis_ext:[11,12,1,2,3],recolte:[7],bons_forts:["Tanaisie"],bons_moy:["Ciboulette","Ortie"],bons_faibles:[],mauvais_forts:[],mauvais_moy:["Noyer (juglone)"],mauvais_faibles:[],guilde:"Buisson à centre ouvert. Fruits, feuilles et bourgeons aromatiques (tisanes, vertus anti-inflammatoires). Autofertile mais meilleure récolte avec plusieurs variétés.",bec_hellouin:"Arbuste de strate basse du jardin-forêt. Excellente rusticité, parfaitement adapté aux hivers de Lozère. Multiplication facile par boutures ligneuses.",rotation:"Pérenne (10–15 ans).",engrais_verts:"Apport annuel de fumure organique en automne.",notes:"Fructifie sur le bois de l'année précédente. Taille février-mars : garder 4–5 branches, supprimer les plus âgées. Variétés : Noir de Bourgogne (aromatique), Blackdown, Andega."},
+  {id:"groseille",type:"fruit",nom:"Groseillier à grappes",icon:"🍇",famille:"Grossulariacée",latin:"Ribes rubrum",espacement:"1–1,2m",profondeur:"collet à niveau",exposition:"Soleil ou mi-ombre",sol:"Toute bonne terre de jardin, frais",ph:"6–7",semis_int:[],semis_ext:[11,12,1,2,3],recolte:[6,7],bons_forts:["Tanaisie"],bons_moy:["Ciboulette"],bons_faibles:[],mauvais_forts:[],mauvais_moy:["Noyer"],mauvais_faibles:[],guilde:"Conserver la forme naturelle en touffe. Les variétés blanches (Blanka) et roses sont moins acides que les rouges. Autofertile.",bec_hellouin:"Strate arbustive basse du jardin-forêt. Rustique, facile, idéal en haie fruitière. Les oiseaux sont friands des fruits — filet conseillé.",rotation:"Pérenne (10–15 ans).",engrais_verts:"Fumure organique annuelle.",notes:"Fructifie sur bois de 2–3 ans. Supprimer les vieilles branches. Variétés : Gloire des Sablons (rose), Blanka (blanche), Versaillaise (rouge)."},
+  {id:"groseille_maquereau",type:"fruit",nom:"Groseillier à maquereau",icon:"🍈",famille:"Grossulariacée",latin:"Ribes uva-crispa",espacement:"1–1,2m",profondeur:"collet à niveau",exposition:"Soleil ou mi-ombre",sol:"Frais, riche, bien drainé",ph:"6–7",semis_int:[],semis_ext:[11,12,1,2,3],recolte:[6,7],bons_forts:["Tanaisie"],bons_moy:["Ciboulette"],bons_faibles:[],mauvais_forts:[],mauvais_moy:["Noyer"],mauvais_faibles:[],guilde:"Gros fruits à maturité en juillet. Attention aux épines à la cueillette. Sensible à l'oïdium américain — aérer le centre du buisson.",bec_hellouin:"Strate basse du jardin-forêt. Supporte bien la mi-ombre sous les arbres fruitiers.",rotation:"Pérenne (10–15 ans).",engrais_verts:"Fumure organique annuelle.",notes:"Tailler pour aérer (oïdium). Variétés : Winham's Industry (rouge, gros fruits), Invicta (résistante oïdium)."},
+  {id:"rhubarbe",type:"fruit",nom:"Rhubarbe",icon:"🥬",famille:"Polygonacée",latin:"Rheum × hybridum",espacement:"90cm–1,5m",profondeur:"bourgeon affleurant",exposition:"Mi-ombre à ensoleillée (éviter plein soleil chaud)",sol:"Profond, frais, riche en humus, bien drainé",ph:"6–7 (neutre à légèrement acide)",semis_int:[],semis_ext:[3,4,10],recolte:[4,5,6],bons_forts:["Pois","Fève","Laitue","Ail","Épinard"],bons_moy:["Radis","Chou"],bons_faibles:[],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Plante vivace gourmande, à installer en bordure ou dans un coin du potager. Ameublir le sol sur 40–50cm avant plantation et incorporer du fumier décomposé.",bec_hellouin:"Vivace de longue durée (10 ans+). Supporte jusqu'à -20°C — parfaitement adaptée à Lozère. Paillage épais permanent pour garder le sol frais.",rotation:"Pérenne. Diviser les touffes tous les 5–6 ans (mars ou septembre-octobre).",engrais_verts:"Paillage permanent + compost annuel au printemps et automne.",notes:"⚠️ Feuilles toxiques (acide oxalique) — ne consommer que les pétioles, ne pas composter les feuilles en grande quantité. Récolter dès la 2e année, max 3–4 tiges la 1re année. Supprimer les tiges florales. Variétés : Victoria, Goliath.",gressent:"Note Gressent (1869) : qualifiée d'« importation britannique méritant les honneurs du potager du propriétaire »."},
+  {id:"artichaut",type:"legume",nom:"Artichaut",icon:"🌵",famille:"Astéracée",latin:"Cynara scolymus",espacement:"80×100cm",profondeur:"œilleton, collet à niveau",exposition:"Plein soleil, abri du vent",sol:"Profond, souple, riche en humus, bien drainé",ph:"6.5–7.5",semis_int:[1,2,3],semis_ext:[3,4,9,10],recolte:[6,7,9,10],bons_forts:["Fève","Pois","Laitue"],bons_moy:["Chou","Tournesol"],bons_faibles:[],mauvais_forts:[],mauvais_moy:["Ail","Oignon"],mauvais_faibles:[],guilde:"Légume-fleur imposant et décoratif, à placer en bordure de parcelle ou en plante vedette dans un coin. Grandes feuilles structurantes.",bec_hellouin:"Plante semi-vivace (3–5 ans). En Lozère (hivers froids), protéger soigneusement les pieds du gel avec un paillage épais — supporte mal en dessous de -5°C. Variété rustique conseillée : Gros vert de Laon.",rotation:"Semi-vivace. Renouveler ou diviser les pieds tous les 3 ans. Replanter sur un autre emplacement.",engrais_verts:"Compost à l'automne précédant la plantation.",notes:"Planter les œilletons (rejets du pied mère) en avril en Lozère. ⚠️ Protection hivernale indispensable en altitude. Variétés : Gros vert de Laon (rustique), Violet de Provence, Camus de Bretagne.",gressent:"Variétés anciennes (Gressent, 1869) : Gros vert de Laon (le meilleur, pour Nord/Centre/Est/Ouest), Camus de Bretagne (précoce, rustique, Ouest/Centre), Violet et Vert de Provence (pour le Midi)."},
+  {id:"asperge",type:"legume",nom:"Asperge",icon:"🍢",famille:"Asparagacée",latin:"Asparagus officinalis",espacement:"50×120cm (griffes)",profondeur:"griffe à 20–25cm",exposition:"Plein soleil",sol:"Léger, sableux, profond, bien drainé",ph:"6.5–7.5",semis_int:[],semis_ext:[3,4],recolte:[4,5,6],bons_forts:["Tomate","Persil"],bons_moy:["Basilic","Œillet d'Inde"],bons_faibles:["Aneth"],mauvais_forts:["Ail","Oignon","Poireau"],mauvais_moy:["Betterave"],mauvais_faibles:[],guilde:"L'asperge et la tomate se protègent mutuellement : la tomate repousse le criocère de l'asperge, l'asperge repousse certains nématodes des tomates. Éviter les alliacées au-dessus des griffes (concurrence racinaire).",bec_hellouin:"Culture de patience : première vraie récolte la 3e année, puis productive 10–15 ans. Aspergeraie permanente avec paillage généreux. Buttage pour asperges blanches, culture à plat pour vertes.",rotation:"Pérenne (10–15 ans). Emplacement définitif — bien choisir.",engrais_verts:"Paillage permanent + compost annuel.",notes:"Surveiller le criocère (coléoptère bleu/rouge) et les limaces sur jeunes turions. Ne pas récolter les 2 premières années. En Lozère, sol sableux drainé indispensable.",methode:"Méthode Gressent : planter les griffes à 1 m de distance en tranchée, avec buttage et fumure. Les 2 premières années (avant production), contre-planter UNIQUEMENT entre les lignes (jamais entre les pieds) avec une seule ligne de légumes hâtifs : pommes de terre précoces, choux, carottes, navets — jamais de semis à la volée qui empêcherait les asperges de se développer.",gressent:"Variétés anciennes (Gressent, 1869) : Rose hâtive d'Argenteuil (variété unique à cultiver sous tous les climats, sans rivale pour beauté, qualité et précocité)."},
+  {id:"brocoli",type:"legume",nom:"Brocoli",icon:"🥦",famille:"Brassicacée",latin:"Brassica oleracea var. italica",espacement:"60×60cm",profondeur:"—",exposition:"Plein soleil",sol:"Riche, frais, ferme, calcaire",ph:"6.5–7.5",semis_int:[3,4],semis_ext:[4,5,6],recolte:[7,8,9,10,11],bons_forts:["Céleri","Oignon","Sauge","Thym","Romarin"],bons_moy:["Betterave","Laitue","Épinard","Menthe"],bons_faibles:["Pomme de terre"],mauvais_forts:["Fenouil","Fraise"],mauvais_moy:["Tomate","Autres choux"],mauvais_faibles:[],guilde:"Comme tous les choux : entourer d'aromatiques fortes (sauge, thym, romarin) contre la piéride. Céleri en compagnon. Tagète en bordure contre les aleurodes.",bec_hellouin:"Récolte de la pomme centrale puis des rejets latéraux qui prolongent la production. Filets anti-insectes recommandés. Bien adapté au climat frais de Lozère.",rotation:"Après légumineuses. Jamais après une autre brassicacée (hernie). Retour 4 ans.",engrais_verts:"Trèfle ou vesce après récolte.",notes:"Après la pomme centrale, de nouveaux jets apparaissent pour des récoltes prolongées. Récolter les boutons avant ouverture. Variétés : Calabrais, Romanesco, De Cicco."},
+  {id:"chou_rave",type:"legume",nom:"Chou-rave",icon:"🥬",famille:"Brassicacée",latin:"Brassica oleracea var. gongylodes",espacement:"25×30cm (petits), 40×50cm (gros)",profondeur:"0.5cm",exposition:"Soleil ou mi-ombre (mi-ombre dans le Midi)",sol:"Profond, enrichi, frais",ph:"6.5–7.5",semis_int:[2,3],semis_ext:[4,5,6,7],recolte:[6,7,8,9,10],bons_forts:["Laitue","Concombre","Tomate","Betterave"],bons_moy:["Épinard","Haricot","Céleri"],bons_faibles:["Oignon"],mauvais_forts:["Autres choux","Fenouil"],mauvais_moy:["Navet","Radis","Fève"],mauvais_faibles:[],guilde:"Croissance rapide (2–3 mois), s'insère entre salades, concombres ou tomates. Éviter le voisinage des autres crucifères (hernie du chou).",bec_hellouin:"Légume rapide et productif idéal en intercalaire. Récolter jeune (10cm) pour éviter la fibrosité. Plusieurs cultures successives possibles dans la saison.",rotation:"Après légumineuses. Jamais après brassicacée. Retour 4 ans.",engrais_verts:"Phacélie après récolte.",notes:"Arroser régulièrement pour éviter une chair fibreuse. La 'pomme' pousse au-dessus du sol. Variétés : Superschmelz (gros), Bleu de Vienne, Blanc de Vienne.",gressent:"Variétés anciennes (Gressent, 1869) : Chou-rave violet hâtif de Vienne (la meilleure variété de chou-rave)."},
+  {id:"patate_douce",type:"legume",nom:"Patate douce",icon:"🍠",famille:"Convolvulacée",latin:"Ipomoea batatas",espacement:"45×80cm",profondeur:"bouture/plant",exposition:"Plein soleil, chaud",sol:"Léger, sableux, bien drainé, réchauffé",ph:"5.5–6.5",semis_int:[3,4],semis_ext:[5,6],recolte:[9,10],bons_forts:["Haricot","Œillet d'Inde"],bons_moy:["Maïs","Tournesol"],bons_faibles:["Capucine"],mauvais_forts:["Courge","Citrouille"],mauvais_moy:[],mauvais_faibles:[],guilde:"Plante tropicale à lianes rampantes qui couvre le sol. Paillage plastique noir pour réchauffer le sol au démarrage.",bec_hellouin:"Culture exigeante en chaleur — délicate en Lozère (altitude, été court). Réserver les expositions les plus chaudes (versant sud, bâche noire) ou cultiver sous tunnel. Planter après tout risque de gel.",rotation:"Après légumineuses. Sol chaud impératif. Retour 3 ans.",engrais_verts:"Vesce-avoine après arrachage.",notes:"⚠️ Difficile en Lozère sans réchauffement du sol. Bâche plastique noire indispensable. Variétés à chair orange : Beauregard, Evangeline. Plus précoces à chair jaune : Georgia Jet."},
+  {id:"topinambour",type:"legume",nom:"Topinambour",icon:"🌻",famille:"Astéracée",latin:"Helianthus tuberosus",espacement:"40×70cm",profondeur:"tubercule à 10cm",exposition:"Plein soleil ou mi-ombre",sol:"Tous sols, préfère drainé",ph:"6–7.5",semis_int:[],semis_ext:[2,3,4],recolte:[10,11,12,1,2,3],bons_forts:["Maïs"],bons_moy:["Haricot"],bons_faibles:[],mauvais_forts:[],mauvais_moy:["La plupart des légumes (effet ombrageant et envahissant)"],mauvais_faibles:[],guilde:"⚠️ ENVAHISSANT : s'installe durablement, le moindre tubercule oublié repousse. Le réserver à une zone dédiée. Cousin du tournesol, atteint 2–3m — peut servir de brise-vent ou d'écran.",bec_hellouin:"Cultivé en bordure ou en haie productive au Bec Hellouin. Très rustique, parfaitement adapté à Lozère (résiste au gel en terre). Récolte au fur et à mesure des besoins tout l'hiver.",rotation:"À isoler — repousse spontanément. Pluriannuel de fait.",engrais_verts:"Non applicable.",notes:"Tubercule au goût d'artichaut. Laisser en terre, récolter tout l'hiver. ⚠️ Très envahissant — délimiter la zone. Pincer une pincée de bicarbonate à la cuisson pour la digestibilité."},
+  {id:"oeillet_inde",type:"fleur",nom:"Œillet d'Inde",icon:"🌼",famille:"Astéracée",latin:"Tagetes patula",espacement:"20×25cm",profondeur:"0.5cm",exposition:"Plein soleil",sol:"Ordinaire, bien drainé",ph:"6–7.5",semis_int:[3,4],semis_ext:[4,5,6],recolte:[6,7,8,9,10],bons_forts:["Tomate","Chou","Pomme de terre","Poivron","Aubergine"],bons_moy:["Concombre","Courgette","Haricot","Melon"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Fleur compagne reine du potager. Ses racines sécrètent une substance qui inhibe les nématodes du sol. Planté au milieu des cultures, il déroute les insectes par confusion olfactive. Indispensable aux pieds des tomates et des choux.",bec_hellouin:"Semé en intercalaire systématique dans les planches de légumes-fruits. Se ressème spontanément. Peut aussi être cultivé comme engrais vert nématicide. 1/3 de fleurs parmi les légumes est l'objectif permaculturel.",rotation:"Annuelle, se ressème. Excellent en culture dérobée nématicide avant une culture sensible.",engrais_verts:"Peut servir d'engrais vert nématicide.",notes:"Récupérer les graines pour ressemer (très productif). Ne pas confondre avec le rose d'Inde (Tagetes erecta), plus grand. Fleurs comestibles. Floraison de juin aux gelées."},
+  {id:"souci",type:"fleur",nom:"Souci",icon:"🌻",famille:"Astéracée",latin:"Calendula officinalis",espacement:"25×30cm",profondeur:"1cm",exposition:"Plein soleil",sol:"Ordinaire, même pauvre",ph:"6–7.5",semis_int:[3,4],semis_ext:[4,5,6,9],recolte:[6,7,8,9,10],bons_forts:["Tomate","Laitue","Chou","Courgette","Aubergine","Carotte"],bons_moy:["Pomme de terre","Asperge","Fraise"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Propriétés nématicides (racines) et antifongiques (limite le mildiou). Attire les syrphes, prédateurs des pucerons. Floraison très longue. Une fois installé, se ressème fidèlement chaque année.",bec_hellouin:"Planté en bordure des rangs de tomates ou entre les pieds. Îlot fleuri tous les 3–4 mètres avec bourrache et phacélie. Fleurs comestibles et médicinales (calendula).",rotation:"Annuelle, se ressème. Bonne plante de bordure permanente de fait.",engrais_verts:"Non, mais excellente plante mellifère et auxiliaire.",notes:"Fleurs comestibles (salades) et médicinales (calendula pour la peau). Couper les fleurs fanées pour prolonger la floraison. Se ressème spontanément année après année."},
+  {id:"capucine",type:"fleur",nom:"Capucine",icon:"🧡",famille:"Tropéolacée",latin:"Tropaeolum majus",espacement:"30×40cm",profondeur:"2cm",exposition:"Plein soleil, tolère mi-ombre",sol:"Ordinaire à pauvre (trop riche = feuilles, peu de fleurs)",ph:"6–7.5",semis_int:[3,4],semis_ext:[4,5,6],recolte:[6,7,8,9,10],bons_forts:["Chou","Courgette","Courge","Concombre","Haricot"],bons_moy:["Tomate","Radis","Pomme de terre","Melon"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Plante-piège (plante martyre) : attire les pucerons noirs à elle pour épargner les légumes. Efficace aussi contre les altises. Comestible (fleurs et feuilles au goût piquant). Grimpante ou rampante.",bec_hellouin:"Cultivée en bordure ou au pied des choux et cucurbitacées comme piège à pucerons. Couvre-sol décoratif et comestible. Se ressème facilement.",rotation:"Annuelle, se ressème.",engrais_verts:"Non. Sol pauvre préféré (sinon peu de fleurs).",notes:"Fleurs et feuilles comestibles (goût poivré). Surveiller les pucerons noirs qu'elle attire — c'est son rôle, ne pas s'en alarmer. Variétés naines ou grimpantes selon l'usage."},
+  {id:"bourrache",type:"fleur",nom:"Bourrache",icon:"💙",famille:"Boraginacée",latin:"Borago officinalis",espacement:"30×40cm",profondeur:"1cm",exposition:"Plein soleil",sol:"Ordinaire, frais",ph:"6–7.5",semis_int:[2,3],semis_ext:[4,5],recolte:[5,6,7,8,9],bons_forts:["Fraise","Courgette","Courge","Tomate","Concombre"],bons_moy:["Chou","Haricot"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Excellente mellifère : attire abeilles et pollinisateurs en masse (améliore la nouaison des courges et fraises). Enrichit le sol en potassium et calcium. Sa haute taille déroute les ravageurs parmi les fraises basses.",bec_hellouin:"Plante-clé des îlots fleuris (avec souci et phacélie). Plantée près des fraises et cucurbitacées pour la pollinisation. Se ressème abondamment — la laisser s'installer.",rotation:"Annuelle, se ressème vigoureusement.",engrais_verts:"Biomasse compostable riche en potassium. Bonne plante à couper-composter.",notes:"Fleurs bleues comestibles (salades, glaçons décoratifs). Mellifère exceptionnelle. Se ressème tellement bien qu'elle peut devenir un peu envahissante — facile à arracher."},
+  {id:"tanaisie",type:"fleur",nom:"Tanaisie",icon:"🌼",famille:"Astéracée",latin:"Tanacetum vulgare",espacement:"40×50cm",profondeur:"0.3cm",exposition:"Plein soleil",sol:"Ordinaire, bien drainé",ph:"6–8",semis_int:[3,4],semis_ext:[4,5],recolte:[7,8,9],bons_forts:["Cassis","Groseille","Framboise","Rosier"],bons_moy:["Chou","Pomme de terre","Concombre"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Vivace répulsive puissante : éloigne pucerons, fourmis, doryphores et piérides. Excellente en bordure des petits fruits et des pommes de terre. Le purin de tanaisie est un insectifuge reconnu.",bec_hellouin:"Plante structurante des bordures. Utilisée fraîche en répulsif ou en purin. Vivace rustique qui s'installe durablement. Attention : légèrement envahissante par rhizomes.",rotation:"Vivace pérenne. Contenir l'expansion.",engrais_verts:"Non. Sert à fabriquer du purin insectifuge.",notes:"⚠️ Toxique à forte dose (ne pas consommer). Vivace envahissante par rhizomes — délimiter. Le purin (feuilles macérées) repousse de nombreux ravageurs. Fleurs jaunes en boutons."},
+  {id:"phacelie",type:"fleur",nom:"Phacélie",icon:"💜",famille:"Hydrophyllacée",latin:"Phacelia tanacetifolia",espacement:"semis à la volée",profondeur:"1cm",exposition:"Plein soleil",sol:"Tous sols",ph:"6–7.5",semis_int:[],semis_ext:[3,4,5,6,7,8,9],recolte:[],bons_forts:["Toutes cultures (engrais vert)"],bons_moy:[],bons_faibles:[],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Engrais vert et mellifère exceptionnel. Croissance rapide, étouffe les adventices, structure le sol avec ses racines. Fleurs mauves très attractives pour abeilles et syrphes. Ne fait partie d'aucune famille de légume cultivé — aucun risque de rotation.",bec_hellouin:"Engrais vert universel du Bec Hellouin : semé sur toute parcelle nue entre deux cultures. Fauché avant montée à graine et laissé en paillage. Couvre-sol vivant idéal.",rotation:"Engrais vert sans contrainte de rotation (famille isolée). À semer entre toutes cultures.",engrais_verts:"C'EST l'engrais vert de référence. Semer après chaque récolte.",notes:"Semer à la volée sur sol nu. Faucher à la floraison (avant graines) et laisser sur place en paillage. Améliore la structure du sol et nourrit les pollinisateurs."},
+  {id:"lavande",type:"aromatique",nom:"Lavande",icon:"💜",famille:"Lamiacée",latin:"Lavandula angustifolia",espacement:"40×50cm",profondeur:"0.3cm",exposition:"Plein soleil, chaud, sec",sol:"Pauvre, calcaire, très drainé, sec",ph:"6.5–8",semis_int:[3,4],semis_ext:[5],recolte:[6,7,8],bons_forts:["Rosier","Chou","Carotte"],bons_moy:["Poireau","Fraise"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Haie aromatique répulsive : éloigne pucerons, fourmis et mouches par son parfum puissant. Mellifère exceptionnelle (abeilles, papillons). Excellente en bordure structurante du potager.",bec_hellouin:"Plante de bordure pérenne et structurante. La lavande vraie (angustifolia) est plus rustique que le lavandin et mieux adaptée à l'altitude. En Lozère, exposition sud et sol très drainé indispensables.",rotation:"Vivace (10–15 ans).",engrais_verts:"Non applicable.",notes:"Lavande vraie (angustifolia) plus rustique que lavandin pour Lozère. Tailler après floraison pour éviter le boisement. Drainage impératif (craint l'humidité hivernale). Bouturage facile."},
+  {id:"origan",type:"aromatique",nom:"Origan / Marjolaine",icon:"🌿",famille:"Lamiacée",latin:"Origanum vulgare",espacement:"25×30cm",profondeur:"0.2cm",exposition:"Plein soleil",sol:"Pauvre, bien drainé, sec",ph:"6.5–8",semis_int:[3,4],semis_ext:[5],recolte:[6,7,8,9],bons_forts:["Tomate","Courgette","Poivron","Concombre"],bons_moy:["Chou","Haricot"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Vivace mellifère qui attire de nombreux pollinisateurs. Répulsif léger contre certains ravageurs. Excellent compagnon des légumes-fruits méditerranéens.",bec_hellouin:"Plante de bordure pérenne. Résiste très bien à la sécheresse — adaptée aux zones caillouteuses de Lozère. Multiplication par division des touffes.",rotation:"Vivace (résiste plusieurs années).",engrais_verts:"Non applicable.",notes:"Origan (vulgare, vivace, fort) et marjolaine (majorana, annuelle, douce) sont cousins. Frais ou séché avec les plats à base de tomate. Mellifère. Récolter avant floraison pour plus d'arôme."},
+  {id:"estragon",type:"aromatique",nom:"Estragon",icon:"🌿",famille:"Astéracée",latin:"Artemisia dracunculus",espacement:"40×50cm",profondeur:"division/bouture",exposition:"Soleil, mi-ombre dans le Midi",sol:"Léger, drainé, riche en matière organique, frais",ph:"6–7.5",semis_int:[],semis_ext:[4,5],recolte:[5,6,7,8,9],bons_forts:["Aubergine","Tomate","Courgette"],bons_moy:["Poivron","Concombre"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Vivace aromatique au goût anisé. Réputé repousser certains pucerons. À installer en bordure ou en carré d'aromatiques.",bec_hellouin:"Plante de bordure pérenne. ⚠️ Craint l'humidité hivernale — drainage soigné indispensable, ce qui peut être délicat en Lozère (paillage + emplacement drainé sud).",rotation:"Vivace. Diviser les touffes tous les 3 ans.",engrais_verts:"Non applicable.",notes:"⚠️ Estragon français (savoureux) à ne pas confondre avec l'estragon russe (sans saveur). Ne se reproduit pas par graines (stérile) — multiplication par division ou bouture uniquement. Paillage pour garder le sol frais l'été.",gressent:"Note Gressent (1869) : renvoyé aux cultures spéciales — aromatique de base du potager."},
+  {id:"livreche",type:"aromatique",nom:"Livèche (céleri perpétuel)",icon:"🌿",famille:"Apiacée",latin:"Levisticum officinale",espacement:"60×80cm",profondeur:"1cm",exposition:"Soleil ou mi-ombre",sol:"Riche, frais, profond, humifère",ph:"6–7",semis_int:[3,4],semis_ext:[4,5,9],recolte:[4,5,6,7,8,9,10],bons_forts:["La plupart des légumes (stimulante)"],bons_moy:[],bons_faibles:[],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Vivace vigoureuse au goût puissant de céleri. Réputée stimuler la santé et le goût des légumes voisins. Grande plante (jusqu'à 2m) — la placer en fond de planche ou en bordure.",bec_hellouin:"Aromatique vivace de longue durée, idéale dans un coin permanent du potager. Très rustique — parfaitement adaptée au climat de Lozère. Remplace le céleri sans replantation.",rotation:"Vivace (10 ans+). Diviser tous les 4–5 ans.",engrais_verts:"Non applicable.",notes:"Remplace avantageusement le céleri-branche (goût plus fort). Feuilles, tiges et graines utilisables. Une seule plante suffit pour une famille. Couper les hampes florales pour prolonger la production de feuilles."},
+  {id:"melisse",type:"aromatique",nom:"Mélisse",icon:"🌿",famille:"Lamiacée",latin:"Melissa officinalis",espacement:"30×40cm",profondeur:"0.2cm",exposition:"Soleil ou mi-ombre",sol:"Frais, riche, bien drainé",ph:"6–7.5",semis_int:[3,4],semis_ext:[5],recolte:[5,6,7,8,9,10],bons_forts:["Tomate","Chou","Courgette"],bons_moy:["Concombre","Brocoli"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:[],mauvais_faibles:[],guilde:"Vivace mellifère au parfum citronné. Attire fortement les abeilles (son nom grec signifie 'abeille'). Réputée repousser certains insectes nuisibles. Se ressème et s'étend — un peu envahissante.",bec_hellouin:"Plante de bordure mellifère. Très rustique. ⚠️ Se ressème abondamment et s'étend par les racines — contenir comme la menthe si nécessaire.",rotation:"Vivace. Se ressème.",engrais_verts:"Non applicable.",notes:"Feuilles en tisane (digestive, apaisante) ou en cuisine (parfum citronné). ⚠️ Tendance à s'étendre — surveiller. Couper avant floraison pour plus d'arôme. Très facile, rustique."},
+  {id:"hysope",type:"aromatique",nom:"Hysope",icon:"💙",famille:"Lamiacée",latin:"Hyssopus officinalis",espacement:"30×40cm",profondeur:"0.3cm",exposition:"Plein soleil, sec",sol:"Pauvre, calcaire, drainé",ph:"6.5–8",semis_int:[3,4],semis_ext:[5],recolte:[6,7,8,9],bons_forts:["Chou","Vigne"],bons_moy:["Carotte","Rosier"],bons_faibles:["La plupart des légumes"],mauvais_forts:[],mauvais_moy:["Radis"],mauvais_faibles:[],guilde:"Vivace répulsive classique des choux : éloigne la piéride. Mellifère (fleurs bleues très visitées). Excellente en bordure des brassicacées.",bec_hellouin:"Plante de bordure des planches de choux au Bec Hellouin. Très rustique et adaptée aux sols pauvres et secs de Lozère. Mellifère structurante.",rotation:"Vivace (résiste plusieurs années).",engrais_verts:"Non applicable.",notes:"Compagne traditionnelle des choux (anti-piéride). Fleurs bleues mellifères. Très résistante à la sécheresse. Tailler après floraison. Usage culinaire et médicinal (léger)."},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// TRACKER DATA
+// ══════════════════════════════════════════════════════════════════
+let data = {depenses:[],recoltes:[],header:{},notes:{}};
+try{const s=localStorage.getItem("potager_v2");if(s)data=Object.assign({depenses:[],recoltes:[],header:{},notes:{}},JSON.parse(s));}catch{}
+let unite="kg";
+let pendingImportData=null;
+function save(){try{localStorage.setItem("potager_v2",JSON.stringify(data));}catch{}}
+function today(){return new Date().toISOString().split("T")[0];}
+function getNote(id){return (data.notes&&data.notes[id])||"";}
+function setNote(id,txt){if(!data.notes)data.notes={};data.notes[id]=txt;save();}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function flash(msg,err){const el=document.getElementById("flash");el.textContent=msg;el.className="flash show"+(err?" err":"");setTimeout(()=>el.classList.remove("show"),2500);}
+
+document.getElementById("dep-date").value=today();
+document.getElementById("rec-date").value=today();
+applyHeader();
+
+// ── HEADER ──
+function applyHeader(){
+  const h=data.header||{};
+  const yr=new Date().getFullYear();
+  document.getElementById("disp-titre").textContent=h.titre||"Mon Potager";
+  document.getElementById("disp-sous-titre").textContent=h.sousTitre||"Mon potager · 200 m²";
+  document.getElementById("disp-annee").textContent=h.annee||("Dépenses & récoltes "+yr);
+  document.title=h.titre||"Mon Potager";
+}
+document.getElementById("btn-open-header").addEventListener("click",function(){
+  const h=data.header||{};
+  document.getElementById("edit-titre").value=h.titre||"";
+  document.getElementById("edit-sous-titre").value=h.sousTitre||"";
+  document.getElementById("edit-annee").value=h.annee||"";
+  document.getElementById("modal-header").classList.add("open");
+});
+document.getElementById("btn-annuler-header").addEventListener("click",()=>document.getElementById("modal-header").classList.remove("open"));
+document.getElementById("btn-sauver-header").addEventListener("click",function(){
+  data.header={
+    titre:document.getElementById("edit-titre").value.trim()||"Mon Potager",
+    sousTitre:document.getElementById("edit-sous-titre").value.trim()||"Mon potager · 200 m²",
+    annee:document.getElementById("edit-annee").value.trim()||("Dépenses & récoltes "+new Date().getFullYear())
+  };
+  save();applyHeader();document.getElementById("modal-header").classList.remove("open");flash("En-tête mis à jour ✓");
+});
+
+// ── TABS ──
+["bilan","depenses","recoltes","fiches","assoc"].forEach(function(tab){
+  document.getElementById("tab-"+tab).addEventListener("click",function(){
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    this.classList.add("active");
+    document.getElementById("panel-"+tab).classList.add("active");
+    if(tab==="bilan")renderBilan();
+    if(tab==="depenses")renderDepenses();
+    if(tab==="recoltes")renderRecoltes();
+    if(tab==="fiches")renderFichesListe();
+    if(tab==="assoc")initAssoc();
+  });
+});
+
+// ── UNITÉ ──
+document.getElementById("btn-kg").addEventListener("click",()=>setUnite("kg"));
+document.getElementById("btn-unite").addEventListener("click",()=>setUnite("unite"));
+function setUnite(val){
+  unite=val;
+  document.getElementById("btn-kg").classList.toggle("active",val==="kg");
+  document.getElementById("btn-unite").classList.toggle("active",val==="unite");
+  document.getElementById("lbl-quantite").textContent=val==="kg"?"Poids (kg)":"Quantité (unités)";
+  document.getElementById("rec-poids").placeholder=val==="kg"?"0.0":"0";
+  document.getElementById("rec-poids").step=val==="kg"?"0.1":"1";
+  document.getElementById("lbl-prix").textContent=val==="kg"?"Prix réf. (€/kg)":"Prix réf. (€/unité)";
+  updatePreview();
+}
+document.getElementById("rec-autre").addEventListener("input",function(){
+  document.getElementById("row-legume-select").style.display=this.value.trim()?"none":"block";
+  updatePreview();
+});
+document.getElementById("rec-legume").addEventListener("change",function(){
+  document.getElementById("rec-prix").value=this.value;updatePreview();
+});
+document.getElementById("rec-poids").addEventListener("input",updatePreview);
+document.getElementById("rec-prix").addEventListener("input",updatePreview);
+function updatePreview(){
+  const q=parseFloat(document.getElementById("rec-poids").value);
+  const p=parseFloat(document.getElementById("rec-prix").value)||2.5;
+  const box=document.getElementById("preview-box");
+  if(q&&!isNaN(q)){box.style.display="block";box.innerHTML="≈ <strong>"+(q*p).toFixed(2)+" €</strong>";}
+  else box.style.display="none";
+}
+function getLegumeNom(){
+  const a=document.getElementById("rec-autre").value.trim();
+  if(a)return a;
+  const s=document.getElementById("rec-legume");
+  return s.options[s.selectedIndex].text;
+}
+
+// ── AJOUT ──
+document.getElementById("btn-add-dep").addEventListener("click",function(){
+  const m=parseFloat(document.getElementById("dep-montant").value);
+  if(!m||isNaN(m)){flash("Saisissez un montant",true);return;}
+  data.depenses.push({id:Date.now(),date:document.getElementById("dep-date").value,categorie:document.getElementById("dep-cat").value,description:document.getElementById("dep-desc").value,montant:m});
+  save();document.getElementById("dep-montant").value="";document.getElementById("dep-desc").value="";flash("Dépense ajoutée ✓");renderDepenses();
+});
+document.getElementById("btn-add-rec").addEventListener("click",function(){
+  const q=parseFloat(document.getElementById("rec-poids").value);
+  if(!q||isNaN(q)){flash("Saisissez une quantité",true);return;}
+  const prix=parseFloat(document.getElementById("rec-prix").value)||2.5;
+  data.recoltes.push({id:Date.now(),date:document.getElementById("rec-date").value,legume:getLegumeNom(),quantite:q,unite,prixRef:prix,valeur:q*prix});
+  save();document.getElementById("rec-poids").value="";document.getElementById("rec-autre").value="";
+  document.getElementById("row-legume-select").style.display="block";
+  document.getElementById("preview-box").style.display="none";
+  flash("Récolte ajoutée ✓");renderRecoltes();
+});
+function delDepense(id){data.depenses=data.depenses.filter(d=>d.id!==id);save();renderDepenses();}
+function delRecolte(id){data.recoltes=data.recoltes.filter(r=>r.id!==id);save();renderRecoltes();}
+
+// ── GRAPHIQUE ──
+function renderChart(annees,deps,vals){
+  const canvas=document.getElementById("chart-annees");
+  const W=canvas.parentElement.clientWidth||300;
+  const H=180;canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");ctx.clearRect(0,0,W,H);
+  const pL=40,pR=10,pT=16,pB=30,cW=W-pL-pR,cH=H-pT-pB;
+  const soldes=annees.map((_,i)=>vals[i]-deps[i]);
+  const all=[...deps,...vals,...soldes];
+  const maxV=Math.max(...all,1),minV=Math.min(...all,0),range=maxV-minV||1;
+  function yp(v){return pT+cH-((v-minV)/range)*cH;}
+  for(let i=0;i<=4;i++){const v=minV+(range/4)*i,y=yp(v);ctx.strokeStyle="#e8e0d0";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(W-pR,y);ctx.stroke();ctx.fillStyle="#aaa";ctx.font="10px sans-serif";ctx.textAlign="right";ctx.fillText(Math.round(v)+"€",pL-4,y+3);}
+  if(minV<0&&maxV>0){const y0=yp(0);ctx.strokeStyle="#c8b89a";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(pL,y0);ctx.lineTo(W-pR,y0);ctx.stroke();}
+  const gW=cW/annees.length,bW=Math.min(gW*0.28,22),gap=bW*0.4;
+  annees.forEach(function(an,i){
+    const cx=pL+gW*i+gW/2,y0=yp(0);
+    const yd=yp(deps[i]);ctx.fillStyle="#8b6f47";ctx.fillRect(cx-bW-gap,Math.min(yd,y0),bW,Math.abs(yd-y0));
+    const yr=yp(vals[i]);ctx.fillStyle="#7c9a5e";ctx.fillRect(cx+gap,Math.min(yr,y0),bW,Math.abs(yr-y0));
+    const ys=yp(soldes[i]);ctx.fillStyle=soldes[i]>=0?"#2d4a1e":"#8b2d1e";ctx.beginPath();ctx.arc(cx,ys,5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#666";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(an,cx,H-pB+18);
+  });
+}
+
+
+// ── RAPPELS DE SAISON ──
+const MOIS_NOMS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function renderSaison(){
+  const m=new Date().getMonth()+1;
+  document.getElementById("saison-mois").textContent="Ce mois-ci ("+MOIS_NOMS[m-1]+") en Lozère";
+  const semisInt=LEGUMES.filter(l=>(l.semis_int||[]).includes(m));
+  const semisExt=LEGUMES.filter(l=>(l.semis_ext||[]).includes(m));
+  const recolte=LEGUMES.filter(l=>(Array.isArray(l.recolte)?l.recolte:[]).includes(m));
+  function grp(arr,icon,label){
+    if(!arr.length)return"";
+    return '<div class="saison-group"><div class="saison-group-lbl">'+icon+' '+label+'</div><div class="saison-tags">'+
+      arr.map(l=>'<span class="saison-tag" data-id="'+l.id+'">'+l.icon+' '+l.nom+'</span>').join("")+'</div></div>';
+  }
+  let html=grp(semisInt,"🌱","Semis intérieur / sous abri")+grp(semisExt,"🌿","Semis & plantation en pleine terre")+grp(recolte,"🧺","À récolter");
+  if(!html)html='<div class="saison-empty">Mois calme au potager — repos et planification.</div>';
+  document.getElementById("saison-content").innerHTML=html;
+  document.querySelectorAll(".saison-tag").forEach(t=>t.addEventListener("click",function(){
+    document.getElementById("tab-fiches").click();
+    setTimeout(()=>showFiche(this.dataset.id),60);
+  }));
+}
+
+// ── BILAN ──
+function renderBilan(){
+  renderSaison();
+  const totDep=data.depenses.reduce((s,d)=>s+d.montant,0);
+  const totVal=data.recoltes.reduce((s,r)=>s+r.valeur,0);
+  const totKg=data.recoltes.filter(r=>!r.unite||r.unite==="kg").reduce((s,r)=>s+r.quantite,0);
+  const solde=totVal-totDep;
+  document.getElementById("solde-card").className="solde-card "+(solde>=0?"positif":"negatif");
+  document.getElementById("solde-val").textContent=(solde>=0?"+":"")+solde.toFixed(2)+" €";
+  document.getElementById("solde-msg").textContent=solde>0?"Le potager est rentable 🎉":solde===0?"À l'équilibre":"Déficit en cours";
+  document.getElementById("stat-dep").textContent=totDep.toFixed(0)+" €";
+  document.getElementById("stat-val-r").textContent=totVal.toFixed(0)+" €";
+  document.getElementById("stat-kg").textContent=totKg.toFixed(1)+" kg";
+  const byY={};
+  data.depenses.forEach(d=>{const y=d.date.slice(0,4);if(!byY[y])byY[y]={dep:0,val:0};byY[y].dep+=d.montant;});
+  data.recoltes.forEach(r=>{const y=r.date.slice(0,4);if(!byY[y])byY[y]={dep:0,val:0};byY[y].val+=r.valeur;});
+  const annees=Object.keys(byY).sort();
+  const cc=document.getElementById("card-chart");
+  if(annees.length>=1){cc.style.display="block";setTimeout(()=>renderChart(annees,annees.map(a=>byY[a].dep),annees.map(a=>byY[a].val)),50);}
+  else cc.style.display="none";
+  const cats=["Semences","Plants achetés","Terreau / amendements","Matériel / outillage"].map(c=>({c,t:data.depenses.filter(d=>d.categorie===c).reduce((s,d)=>s+d.montant,0)})).filter(x=>x.t>0);
+  const cc2=document.getElementById("card-cats");
+  if(cats.length){cc2.style.display="block";document.getElementById("cats-content").innerHTML=cats.map(({c,t})=>`<div class="bar-row"><div class="bar-header"><span>${CAT_ICONS[c]} ${esc(c)}</span><span style="font-weight:bold;color:${CAT_COLORS[c]}">${t.toFixed(2)} €</span></div><div class="bar-track"><div class="bar-fill" style="background:${CAT_COLORS[c]};width:${Math.min(100,(t/totDep)*100)}%"></div></div></div>`).join("");}
+  else cc2.style.display="none";
+  const lm={};data.recoltes.forEach(r=>{lm[r.legume]=(lm[r.legume]||0)+r.quantite;});
+  const tops=Object.entries(lm).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const ct=document.getElementById("card-top");
+  if(tops.length){ct.style.display="block";document.getElementById("top-content").innerHTML=tops.map(([l,q])=>{const u=(data.recoltes.find(r=>r.legume===l)||{}).unite||"kg";return`<div class="top-row"><span>${esc(l)}</span><span style="color:#7c9a5e;font-weight:bold">${q%1===0?q:q.toFixed(1)} ${u==="unite"?"u.":"kg"}</span></div>`;}).join("");}
+  else ct.style.display="none";
+}
+
+// ── LISTES ──
+function renderDepenses(){
+  const el=document.getElementById("list-depenses");
+  const q=(document.getElementById("search-dep").value||"").toLowerCase();
+  let sorted=[...data.depenses].sort((a,b)=>b.date.localeCompare(a.date));
+  if(q)sorted=sorted.filter(d=>(d.description||"").toLowerCase().includes(q)||d.categorie.toLowerCase().includes(q)||d.date.includes(q));
+  if(!sorted.length){el.innerHTML='<div class="empty">Aucune dépense enregistrée</div>';return;}
+  el.innerHTML=sorted.map(d=>`<div class="list-item"><div class="item-icon">${CAT_ICONS[d.categorie]||"📦"}</div><div class="item-body"><div class="item-name">${esc(d.description||d.categorie)}</div><div class="item-meta">${d.date} · ${d.categorie}</div></div><div class="item-val" style="color:#8b4513">${d.montant.toFixed(2)} €</div><button class="item-del" data-id="${d.id}">×</button></div>`).join("");
+  el.querySelectorAll(".item-del").forEach(b=>b.addEventListener("click",()=>delDepense(Number(b.dataset.id))));
+}
+function renderRecoltes(){
+  const el=document.getElementById("list-recoltes");
+  const q=(document.getElementById("search-rec").value||"").toLowerCase();
+  let sorted=[...data.recoltes].sort((a,b)=>b.date.localeCompare(a.date));
+  if(q)sorted=sorted.filter(r=>r.legume.toLowerCase().includes(q)||r.date.includes(q));
+  if(!sorted.length){el.innerHTML='<div class="empty">Aucune récolte enregistrée</div>';return;}
+  el.innerHTML=sorted.map(r=>{const u=r.unite==="unite"?"u.":"kg";const q=r.quantite%1===0?r.quantite:r.quantite.toFixed(1);return`<div class="list-item"><div class="item-icon">🥬</div><div class="item-body"><div class="item-name">${esc(r.legume)}</div><div class="item-meta">${r.date} · ${q} ${u} · ${r.prixRef} €/${u}</div></div><div class="item-val" style="color:#7c9a5e">+${r.valeur.toFixed(2)} €</div><button class="item-del" data-id="${r.id}">×</button></div>`;}).join("");
+  el.querySelectorAll(".item-del").forEach(b=>b.addEventListener("click",()=>delRecolte(Number(b.dataset.id))));
+}
+
+// ── EXPORT / IMPORT ──
+document.getElementById("btn-export-json").addEventListener("click",function(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="potager_"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(url);flash("Sauvegarde téléchargée ✓");
+});
+document.getElementById("btn-import-json").addEventListener("click",()=>document.getElementById("file-import").click());
+document.getElementById("file-import").addEventListener("change",function(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){try{const p=JSON.parse(ev.target.result);if(!p.depenses||!p.recoltes)throw new Error();pendingImportData=p;document.getElementById("modal-import").classList.add("open");}catch{flash("Fichier invalide",true);}e.target.value="";};
+  reader.readAsText(file);
+});
+document.getElementById("btn-annuler-import").addEventListener("click",()=>document.getElementById("modal-import").classList.remove("open"));
+document.getElementById("btn-confirmer-import").addEventListener("click",function(){
+  if(!pendingImportData)return;
+  data=Object.assign({depenses:[],recoltes:[],header:{}},pendingImportData);
+  save();applyHeader();document.getElementById("modal-import").classList.remove("open");pendingImportData=null;
+  flash("Données restaurées ✓");renderBilan();renderDepenses();renderRecoltes();
+});
+document.getElementById("btn-csv-dep").addEventListener("click",()=>exportCSV("depenses"));
+document.getElementById("btn-csv-rec").addEventListener("click",()=>exportCSV("recoltes"));
+function exportCSV(type){
+  let csv,filename;
+  if(type==="depenses"){csv="Date;Catégorie;Description;Montant (€)\n"+[...data.depenses].sort((a,b)=>a.date.localeCompare(b.date)).map(d=>`${d.date};${d.categorie};${d.description||""};${d.montant.toFixed(2)}`).join("\n");filename="potager_depenses_"+new Date().getFullYear()+".csv";}
+  else{csv="Date;Légume;Quantité;Unité;Prix réf. (€);Valeur estimée (€)\n"+[...data.recoltes].sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${r.date};${r.legume};${r.quantite};${r.unite==="unite"?"unité":"kg"};${r.prixRef.toFixed(2)};${r.valeur.toFixed(2)}`).join("\n");filename="potager_recoltes_"+new Date().getFullYear()+".csv";}
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);flash("Export téléchargé ✓");
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FICHES
+// ══════════════════════════════════════════════════════════════════
+let ficheFilter="all",ficheSearch="";
+function renderFichesListe(){
+  document.getElementById("fiches-detail-view").style.display="none";
+  document.getElementById("fiches-liste-view").style.display="block";
+  const list=LEGUMES.filter(l=>{
+    const mt=ficheFilter==="all"||(l.type||"legume")===ficheFilter;
+    const ms=!ficheSearch||l.nom.toLowerCase().includes(ficheSearch.toLowerCase());
+    return mt&&ms;
+  }).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"));
+  const gc=document.getElementById("legumes-grid-container");
+  if(!list.length){gc.innerHTML='<div class="empty">Aucune fiche trouvée</div>';return;}
+  gc.innerHTML='<div class="legumes-grid">'+list.map(l=>`<div class="legume-card" data-id="${l.id}"><div class="legume-icon">${l.icon}</div><div class="legume-name">${l.nom}</div><div class="legume-fam">${l.famille}</div></div>`).join("")+'</div>';
+  gc.querySelectorAll(".legume-card").forEach(c=>c.addEventListener("click",()=>showFiche(c.dataset.id)));
+}
+document.getElementById("fiche-search").addEventListener("input",function(){ficheSearch=this.value;renderFichesListe();});
+document.getElementById("fam-filters").addEventListener("click",function(e){
+  const btn=e.target.closest(".filter-btn");if(!btn)return;
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+  ficheFilter=btn.dataset.type;renderFichesListe();
+});
+
+function calRow(actifs,cls){return MOIS_LBL.map((_,i)=>`<div class="cal-bar ${actifs.includes(i+1)?cls:'cal-vd'}"></div>`).join("");}
+function tags(arr,cls){
+  if(!arr||!arr.length)return '<span style="color:#ccc;font-family:sans-serif;font-size:11px">Aucun</span>';
+  return arr.map(n=>`<span class="assoc-tag ${cls}">${esc(n)}</span>`).join(" ");
+}
+
+function showFiche(id){
+  const l=LEGUMES.find(x=>x.id===id);if(!l)return;
+  document.getElementById("fiches-liste-view").style.display="none";
+  const dv=document.getElementById("fiches-detail-view");dv.style.display="block";
+  const si=l.semis_int||[],se=l.semis_ext||[],re=Array.isArray(l.recolte)?l.recolte:[];
+  dv.innerHTML=`
+    <button class="btn-back" id="fiche-back">← Retour à la liste</button>
+    <div class="fiche">
+      <div class="fiche-header">
+        <div style="font-size:36px">${l.icon}</div>
+        <div><div class="fiche-nom">${l.nom}</div><div class="fiche-famille">${l.famille}</div><div class="fiche-latin">${l.latin}</div></div>
+      </div>
+      <div>
+        <div class="fiche-section">
+          <div class="fiche-section-title">📐 Plantation</div>
+          <div class="quick-grid">
+            <div class="quick-box"><div class="quick-val">${l.espacement}</div><div class="quick-lbl">Espacement</div></div>
+            <div class="quick-box"><div class="quick-val">${l.profondeur||"—"}</div><div class="quick-lbl">Profondeur</div></div>
+            <div class="quick-box"><div class="quick-val" style="font-size:11px">${l.exposition}</div><div class="quick-lbl">Exposition</div></div>
+            <div class="quick-box"><div class="quick-val">pH ${l.ph}</div><div class="quick-lbl">pH cible</div></div>
+          </div>
+        </div>
+        <div class="fiche-section">
+          <div class="fiche-section-title">📅 Calendrier (Lozère)</div>
+          <div class="cal-months-row">${MOIS_LBL.map(m=>`<div class="cal-month">${m}</div>`).join("")}</div>
+          ${si.length?`<div class="cal-lbl"><div class="cal-dot-l cal-si"></div>Semis intérieur</div><div class="cal-grid-r">${calRow(si,"cal-si")}</div>`:``}
+          ${se.length?`<div class="cal-lbl"><div class="cal-dot-l cal-se"></div>Semis / Plantation ext.</div><div class="cal-grid-r">${calRow(se,"cal-se")}</div>`:``}
+          ${re.length?`<div class="cal-lbl"><div class="cal-dot-l cal-re"></div>Récolte</div><div class="cal-grid-r">${calRow(re,"cal-re")}</div>`:``}
+        </div>
+        <div class="fiche-section">
+          <div class="fiche-section-title">💚 Bonnes associations</div>
+          <div class="legend-row-a"><div class="legend-item-a"><span class="legend-dot-a" style="background:#2d4a1e"></span>Forte</div><div class="legend-item-a"><span class="legend-dot-a" style="background:#7c9a5e"></span>Moyenne</div><div class="legend-item-a"><span class="legend-dot-a" style="background:#c8ddb8"></span>Faible</div></div>
+          <div class="assoc-list">${tags(l.bons_forts,"tag-bf")}</div>
+          <div class="assoc-list">${tags(l.bons_moy,"tag-bm")}</div>
+          <div class="assoc-list">${tags(l.bons_faibles,"tag-bw")}</div>
+        </div>
+        <div class="fiche-section">
+          <div class="fiche-section-title">❌ Mauvaises associations</div>
+          <div class="legend-row-a"><div class="legend-item-a"><span class="legend-dot-a" style="background:#8b1a4a"></span>Forte</div><div class="legend-item-a"><span class="legend-dot-a" style="background:#d44a8a"></span>Moyenne</div><div class="legend-item-a"><span class="legend-dot-a" style="background:#f0b8d0"></span>Faible</div></div>
+          <div class="assoc-list">${tags(l.mauvais_forts,"tag-mf")}</div>
+          <div class="assoc-list">${tags(l.mauvais_moy,"tag-mm")}</div>
+          <div class="assoc-list">${tags(l.mauvais_faibles,"tag-mw")}</div>
+        </div>
+        <div class="fiche-section"><div class="fiche-section-title">🌀 Guilde</div><div class="guilde-box"><div class="fiche-text">${l.guilde}</div></div></div>
+        <div class="fiche-section"><div class="fiche-section-title">🌾 Bec Hellouin & Lozère</div><div class="bec-box"><div class="fiche-text">${l.bec_hellouin}</div></div></div>
+        <div class="fiche-section"><div class="fiche-section-title">🔄 Rotation</div><div class="fiche-text">${l.rotation}</div>${l.engrais_verts?`<div style="margin-top:8px;padding:8px 12px;background:#f8f5ef;border-radius:6px;font-family:sans-serif;font-size:12px;color:#666"><strong>Engrais vert :</strong> ${l.engrais_verts}</div>`:""}</div>
+        <div class="fiche-section"><div class="fiche-section-title">📝 Notes pratiques</div><div class="fiche-text">${l.notes}</div></div>
+        ${l.gressent?`<div class="fiche-section"><div class="fiche-section-title">📜 Variétés anciennes</div><div class="bec-box" style="border-left-color:#8b6f47;background:#f7f3ec"><div class="fiche-text">${l.gressent}</div></div></div>`:""}
+        ${l.methode?`<div class="fiche-section"><div class="fiche-section-title">🛠️ Méthode culturale (Gressent)</div><div class="bec-box" style="border-left-color:#8b6f47;background:#f7f3ec"><div class="fiche-text">${l.methode}</div></div></div>`:""}
+        <div class="fiche-section"><div class="fiche-section-title">✍️ Mes notes personnelles</div><div class="note-perso-box"><textarea class="note-perso-area" id="note-area-${l.id}" placeholder="Vos observations : variété testée, résultat, date réelle de plantation…">${esc(getNote(l.id))}</textarea><button class="note-perso-save" id="note-save-${l.id}">💾 Enregistrer ma note</button><div class="note-perso-hint">Stockée sur votre appareil uniquement.</div></div></div>
+      </div>
+    </div>`;
+  document.getElementById("fiche-back").addEventListener("click",()=>{renderFichesListe();window.scrollTo(0,0);});
+  const noteSaveBtn=document.getElementById("note-save-"+l.id);
+  if(noteSaveBtn)noteSaveBtn.addEventListener("click",function(){setNote(l.id,document.getElementById("note-area-"+l.id).value);flash("Note enregistrée ✓");});
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ASSOCIATIONS
+// ══════════════════════════════════════════════════════════════════
+let assocView="resume";
+let assocGrilleBuilt=false;
+
+function initAssoc(){
+  // Populate select
+  const sel=document.getElementById("assoc-select");
+  if(!sel.options.length){
+    [...LEGUMES].sort((a,b)=>a.nom.localeCompare(b.nom,"fr")).forEach(l=>{const o=document.createElement("option");o.value=l.id;o.textContent=l.icon+" "+l.nom;sel.appendChild(o);});
+    sel.addEventListener("change",()=>renderAssocResume(sel.value));
+  }
+  renderAssocResume(sel.value||LEGUMES[0].id);
+}
+
+document.getElementById("assoc-tab-resume").addEventListener("click",function(){
+  document.querySelectorAll(".assoc-tab").forEach(t=>t.classList.remove("active"));this.classList.add("active");
+  document.getElementById("assoc-resume-panel").style.display="block";
+  document.getElementById("assoc-grille-panel").style.display="none";
+  assocView="resume";
+});
+document.getElementById("assoc-tab-grille").addEventListener("click",function(){
+  document.querySelectorAll(".assoc-tab").forEach(t=>t.classList.remove("active"));this.classList.add("active");
+  document.getElementById("assoc-resume-panel").style.display="none";
+  document.getElementById("assoc-grille-panel").style.display="block";
+  assocView="grille";
+  if(!assocGrilleBuilt){buildGrille();assocGrilleBuilt=true;}
+});
+
+function renderAssocResume(id){
+  const l=LEGUMES.find(x=>x.id===id);if(!l)return;
+  function tagList(arr,cls,label){
+    if(!arr||!arr.length)return``;
+    return`<div class="assoc-section-lbl">${label}</div><div class="assoc-list">${arr.map(n=>`<span class="assoc-tag ${cls}">${esc(n)}</span>`).join(" ")}</div>`;
+  }
+  document.getElementById("assoc-resume-content").innerHTML=`
+    <div class="assoc-resume">
+      <div class="assoc-resume-header">
+        <div class="assoc-resume-icon">${l.icon}</div>
+        <div class="assoc-resume-nom">${l.nom}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-family:sans-serif;text-transform:uppercase;letter-spacing:1px;color:#7c9a5e;margin-bottom:6px">💚 Bonnes associations</div>
+        ${tagList(l.bons_forts,"tag-bf","Fiabilité forte")}
+        ${tagList(l.bons_moy,"tag-bm","Fiabilité moyenne")}
+        ${tagList(l.bons_faibles,"tag-bw","Fiabilité faible")}
+      </div>
+      <div>
+        <div style="font-size:11px;font-family:sans-serif;text-transform:uppercase;letter-spacing:1px;color:#d44a8a;margin-bottom:6px">❌ Mauvaises associations</div>
+        ${tagList(l.mauvais_forts,"tag-mf","Fiabilité forte")}
+        ${tagList(l.mauvais_moy,"tag-mm","Fiabilité moyenne")}
+        ${tagList(l.mauvais_faibles,"tag-mw","Fiabilité faible")}
+      </div>
+      ${(l.bons_forts.length+l.bons_moy.length+l.mauvais_forts.length+l.mauvais_moy.length===0)?'<div class="empty" style="padding:16px">Données d\'association limitées pour ce légume</div>':''}
+    </div>`;
+}
+
+function buildGrille(){
+  // Construire la matrice d'associations à partir des données légumes
+  const noms=LEGUMES.map(l=>l.nom);
+  // cell(i,j) : relation entre LEGUMES[i] (ligne) et LEGUMES[j] (colonne)
+  function getCell(i,j){
+    if(i===j)return"same";
+    const li=LEGUMES[i];
+    const nj=LEGUMES[j].nom;
+    if(li.bons_forts&&li.bons_forts.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"bf";
+    if(li.bons_moy&&li.bons_moy.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"bm";
+    if(li.bons_faibles&&li.bons_faibles.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"bw";
+    if(li.mauvais_forts&&li.mauvais_forts.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"mf";
+    if(li.mauvais_moy&&li.mauvais_moy.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"mm";
+    if(li.mauvais_faibles&&li.mauvais_faibles.some(n=>nj.toLowerCase().includes(n.toLowerCase())||n.toLowerCase().includes(nj.toLowerCase())))return"mw";
+    // Même famille → même case noire
+    if(LEGUMES[i].famille===LEGUMES[j].famille)return"same";
+    return"";
+  }
+  // Construire HTML table
+  let html='<table class="grille"><thead><tr><th class="col-hd">Légume</th>';
+  LEGUMES.forEach(l=>{html+=`<th class="row-hd">${l.icon} ${l.nom}</th>`;});
+  html+='</tr></thead><tbody>';
+  LEGUMES.forEach((li,i)=>{
+    html+=`<tr><th class="col-hd">${li.icon} ${li.nom}</th>`;
+    LEGUMES.forEach((_,j)=>{
+      const c=getCell(i,j);
+      let bg="c-empty",txt="";
+      if(c==="same"){bg="c-same";}
+      else if(c==="bf"){bg="c-bf";}
+      else if(c==="bm"){bg="c-bm";}
+      else if(c==="bw"){bg="c-bw";}
+      else if(c==="mf"){bg="c-mf";}
+      else if(c==="mm"){bg="c-mm";}
+      else if(c==="mw"){bg="c-mw";}
+      html+=`<td class="cell ${bg}">${txt}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById("grille-container").innerHTML=html;
+}
+
+
+// ── BIENVENUE ──
+(function(){
+  const key = "potager_welcome_v1";
+  const seen = localStorage.getItem(key);
+  if(!seen){
+    document.getElementById("welcome-overlay").classList.remove("hidden");
+  } else {
+    document.getElementById("welcome-overlay").classList.add("hidden");
+  }
+  document.getElementById("welcome-btn").addEventListener("click", function(){
+    localStorage.setItem(key, "1");
+    document.getElementById("welcome-overlay").classList.add("hidden");
+  });
+})();
+
+
+document.getElementById("search-dep").addEventListener("input",renderDepenses);
+document.getElementById("search-rec").addEventListener("input",renderRecoltes);
+
+// ── INIT ──
+renderBilan();renderDepenses();renderRecoltes();
+</script>
+</body>
+</html>
