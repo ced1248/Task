@@ -609,6 +609,12 @@ header{
 .rv-h{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
 .rv-txt{font-size:14px;line-height:1.5;color:var(--text);}
 .today-meals{display:flex;flex-direction:column;gap:6px;}
+.home-note{
+  width:100%;border:1px solid var(--border);border-radius:var(--r2);
+  background:var(--bg);padding:10px 12px;font-size:14px;font-family:inherit;
+  color:var(--text);resize:vertical;min-height:70px;line-height:1.5;
+}
+.home-note:focus{border-color:var(--accent);outline:none;}
 .today-meal-row{display:flex;align-items:center;gap:12px;}
 .tm-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;width:42px;flex:0 0 auto;}
 .tm-val{font-size:14px;color:var(--text);}
@@ -1450,7 +1456,8 @@ function defaultData() {
       {id:'rc9',name:'Chili sin carne',veg:true,ingredients:'Haricots rouges, maïs, tomates, poivron, oignon, ail, cumin, paprika, riz',steps:'Faire revenir oignon, ail, poivron. Ajouter épices, tomates, haricots et maïs. Mijoter 25 min. Servir avec du riz.'},
       {id:'rc10',name:'Tartiflette',veg:false,ingredients:'Pommes de terre, reblochon, lardons, oignon, vin blanc, crème',steps:'Cuire les pommes de terre. Faire revenir lardons et oignon. Mélanger, ajouter un peu de crème. Couvrir de reblochon. Gratiner 20 min à 200°C.'}
     ],
-    recurDone:{}
+    recurDone:{},
+    note:''
   };
 }
 
@@ -1518,6 +1525,7 @@ function loadData() {
       if(typeof parsed.meals!=='object'||!parsed.meals) parsed.meals = {};
       if(!Array.isArray(parsed.recipes)) parsed.recipes = [];
       parsed.recipes = parsed.recipes.map(normalizeRecipe);
+      if(typeof parsed.note!=='string') parsed.note='';
       // migration : ancien "workdays" (Sandra=p2) → dayMarks
       if(parsed.workdays && parsed.workdays.length){
         parsed.workdays.forEach(ds=>{
@@ -1580,6 +1588,7 @@ async function pullRemote(showToast=false){
         if(typeof data.meals!=='object'||!data.meals) data.meals = {};
         if(!Array.isArray(data.recipes)) data.recipes = [];
         data.recipes = data.recipes.map(normalizeRecipe);
+        if(typeof data.note!=='string') data.note='';
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -2463,6 +2472,12 @@ function renderToday(){
     html+=mealHTML;
   }
 
+  // ─── Bloc-notes partagé ───
+  html+=`<div class="today-block">
+    <div class="today-head">📝 Bloc-notes</div>
+    <textarea class="home-note" id="home-note" placeholder="Notes partagées de la famille…" onchange="setHomeNote(this.value)">${esc(data.note||'')}</textarea>
+  </div>`;
+
   // ─── Ma semaine (lun → ven en haut, week-end en dessous) ───
   const now=new Date(); now.setHours(0,0,0,0);
   const monday=new Date(now);
@@ -2775,6 +2790,11 @@ function toggleRoutines(){
   const hidden = localStorage.getItem('routines_hidden')==='1';
   localStorage.setItem('routines_hidden', hidden?'0':'1');
   renderToday();
+}
+
+function setHomeNote(val){
+  data.note=val;
+  saveData();   // synchronisé via Supabase → partagé avec la famille
 }
 
 function setMeal(ds,key,val){
