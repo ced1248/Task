@@ -1335,6 +1335,7 @@ header{
       <div class="form-group"><label class="form-label">Heure</label><input type="time" id="day-ev-time"></div>
       <div class="form-group"><label class="form-label">Rendez-vous</label><input type="text" id="day-ev-text" placeholder="Ex : Dentiste" onkeydown="if(event.key==='Enter')addEvent()"></div>
     </div>
+    <div id="day-tasks-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
     <div class="form-group" style="margin-bottom:10px;">
       <label class="form-label">Planifier une tâche existante ce jour</label>
       <select id="day-task-select" class="inp" onchange="assignTaskToDay(this.value)"></select>
@@ -3002,9 +3003,35 @@ function openDay(ds){
   document.getElementById('day-ev-text').value='';
   document.getElementById('day-ev-time').value='';
   renderDayMarks();
+  renderDayTasks();
   renderDayTaskSelect();
   renderDayEvents();
   openModal('modal-day');
+}
+
+// Tâches planifiées ce jour (avec bouton retirer l'échéance)
+function renderDayTasks(){
+  const ds=document.getElementById('day-date').value;
+  const box=document.getElementById('day-tasks-list');
+  if(!box) return;
+  const dayTasks=data.tasks.filter(t=>t.deadline===ds && !t.done);
+  if(!dayTasks.length){ box.innerHTML=''; return; }
+  box.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--text2);">Tâches ce jour</div>`+
+    dayTasks.map(t=>`
+      <div class="course-item">
+        <span class="course-name">📋 ${esc(t.title)}</span>
+        <button class="btn-icon" onclick="unassignTaskFromDay('${t.id}')" data-tip="Retirer de ce jour">✕</button>
+      </div>`).join('');
+}
+
+function unassignTaskFromDay(taskId){
+  const t=data.tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  t.deadline='';
+  saveData();
+  renderDayTasks(); renderDayTaskSelect();
+  calNeedsRefresh=true;
+  toast('Tâche retirée de ce jour');
 }
 
 // Travail / vacances par personne
@@ -3071,6 +3098,7 @@ function assignTaskToDay(taskId){
   if(!t) return;
   t.deadline=ds;
   saveData(); render();
+  renderDayTasks();
   renderDayTaskSelect();
   document.getElementById('day-task-select').value='';
   renderDayEvents();
