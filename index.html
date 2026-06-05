@@ -590,6 +590,24 @@ header{
   padding:0 8px;font-size:14px;cursor:pointer;flex:0 0 auto;
 }
 .meal-die:hover{background:var(--accent);}
+.meal-view{background:var(--accent-l);border:1px solid var(--border);border-radius:var(--r2);padding:0 8px;font-size:14px;cursor:pointer;flex:0 0 auto;}
+.meal-view:hover{background:var(--accent);}
+/* Cahier de recettes */
+.rec-cat-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;}
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.rec-card{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r2);
+  padding:10px 12px;box-shadow:var(--shadow);
+}
+.rec-card:hover{box-shadow:var(--shadow2);border-color:var(--border2);}
+.rec-icon{font-size:24px;flex:0 0 auto;}
+.rec-info{flex:1;min-width:0;}
+.rec-name{font-size:13px;font-weight:600;line-height:1.2;}
+.rec-meta{font-size:10px;color:var(--text3);margin-top:2px;}
+.rv-sec{margin-bottom:14px;}
+.rv-h{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.rv-txt{font-size:14px;line-height:1.5;color:var(--text);}
 .today-meals{display:flex;flex-direction:column;gap:6px;}
 .today-meal-row{display:flex;align-items:center;gap:12px;}
 .tm-label{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text3);text-transform:uppercase;width:42px;flex:0 0 auto;}
@@ -1302,22 +1320,49 @@ header{
       <button class="modal-close" onclick="closeModal('modal-recipe')">✕</button>
     </div>
     <input type="hidden" id="recipe-id">
-    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Nom *</label><input type="text" id="recipe-name" placeholder="Ex : Tartiflette"></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Nom *</label><input type="text" id="recipe-name" placeholder="Ex : Tartiflette"></div>
+      <div class="form-group"><label class="form-label">Icône</label>
+        <select id="recipe-icon"></select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Catégorie</label><select id="recipe-cat"></select></div>
+      <div class="form-group"><label class="form-label">Auteur</label><select id="recipe-author"></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Temps</label><input type="text" id="recipe-time" placeholder="Ex : 45 min"></div>
+      <div class="form-group"><label class="form-label">Portions</label><input type="text" id="recipe-portions" placeholder="Ex : 4"></div>
+    </div>
     <div class="form-group" style="margin-bottom:12px;">
       <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="recipe-veg" style="width:auto;"> 🌱 Végétarien
       </label>
     </div>
     <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Ingrédients</label>
-      <textarea id="recipe-ingredients" rows="4" placeholder="Un ingrédient par ligne, ou séparés par des virgules…"></textarea>
+      <textarea id="recipe-ingredients" rows="4" placeholder="Un ingrédient par ligne…"></textarea>
     </div>
     <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Préparation</label>
       <textarea id="recipe-steps" rows="6" placeholder="Les étapes de la recette…"></textarea>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Note (astuce, variante…)</label>
+      <textarea id="recipe-note" rows="2" placeholder="Optionnel…"></textarea>
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeModal('modal-recipe')">Fermer</button>
       <button class="btn btn-primary" onclick="saveRecipe()">Enregistrer</button>
     </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: CONSULTATION RECETTE ════ -->
+<div class="overlay" id="modal-recipe-view">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Recette</span>
+      <button class="modal-close" onclick="closeModal('modal-recipe-view')">✕</button>
+    </div>
+    <div id="recipe-view-body"></div>
   </div>
 </div>
 
@@ -1429,6 +1474,33 @@ let isAuthed = false;
 
 const LS_KEY = 'famille_taches_v3';
 
+// Normalise une recette vers le format enrichi (compatibilité ascendante)
+function normalizeRecipe(r){
+  if(typeof r==='string') r={name:r};
+  return {
+    id: r.id || uid(),
+    name: r.name || '',
+    icon: r.icon || '🍽️',
+    cat: r.cat || 'plats',
+    author: r.author || '',
+    time: r.time || '',
+    portions: r.portions || '',
+    veg: !!r.veg,
+    ingredients: r.ingredients || '',
+    steps: r.steps || '',
+    note: r.note || ''
+  };
+}
+const RECIPE_CATS=[
+  {id:'plats',label:'Plats'},
+  {id:'entrees',label:'Entrées'},
+  {id:'gouter',label:'Goûters / Desserts'},
+  {id:'accomp',label:'Accompagnements'},
+  {id:'conserves',label:'Conserves'},
+  {id:'autres',label:'Autres'}
+];
+function catLabel(id){ const c=RECIPE_CATS.find(c=>c.id===id); return c?c.label:'Autres'; }
+
 function loadData() {
   try {
     const d = localStorage.getItem(LS_KEY);
@@ -1442,8 +1514,7 @@ function loadData() {
       if(!Array.isArray(parsed.vacances)) parsed.vacances = [];
       if(typeof parsed.meals!=='object'||!parsed.meals) parsed.meals = {};
       if(!Array.isArray(parsed.recipes)) parsed.recipes = [];
-      parsed.recipes = parsed.recipes.map(r=> typeof r==='string'
-        ? {id:uid(),name:r,veg:false,ingredients:'',steps:''} : r);
+      parsed.recipes = parsed.recipes.map(normalizeRecipe);
       // migration : ancien "workdays" (Sandra=p2) → dayMarks
       if(parsed.workdays && parsed.workdays.length){
         parsed.workdays.forEach(ds=>{
@@ -1505,8 +1576,7 @@ async function pullRemote(showToast=false){
         if(!Array.isArray(data.vacances)) data.vacances = [];
         if(typeof data.meals!=='object'||!data.meals) data.meals = {};
         if(!Array.isArray(data.recipes)) data.recipes = [];
-        data.recipes = data.recipes.map(r=> typeof r==='string'
-          ? {id:uid(),name:r,veg:false,ingredients:'',steps:''} : r);
+        data.recipes = data.recipes.map(normalizeRecipe);
         localStorage.setItem(LS_KEY, JSON.stringify(data));
         render();
         if(showToast) toast('Données à jour ✓','success');
@@ -2650,32 +2720,51 @@ function renderMeals(){
         ${data.recipes.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('')}
       </select>`;
     };
-    const slot=(key,lbl)=>`
+    const slot=(key,lbl)=>{
+      const val=m[key]||'';
+      const hasRecipe=val && (data.recipes||[]).some(r=>r.name.toLowerCase()===val.toLowerCase());
+      return `
       <div class="meal-row">
         <span class="meal-tag">${lbl}</span>
         <div class="meal-field">
-          <input class="meal-input" value="${esc(m[key]||'')}" placeholder="Ajouter un plat…" onchange="setMeal('${ds}','${key}',this.value)">
+          <input class="meal-input" value="${esc(val)}" placeholder="Ajouter un plat…" onchange="setMeal('${ds}','${key}',this.value)">
+          ${hasRecipe?`<button class="meal-view" onclick="viewRecipeByName('${esc(val).replace(/'/g,"\\'")}')" title="Voir la recette">👁</button>`:''}
           ${recipeMenu(key)}
           ${(data.recipes&&data.recipes.length)?`<button class="meal-die" onclick="randomMeal('${ds}','${key}')" title="Plat au hasard">🎲</button>`:''}
         </div>
       </div>`;
+    };
     return `<div class="meal-day${ds===today?' is-today':''}">
       <div class="meal-day-name">${name} ${cur.getDate()}</div>
       <div class="meal-rows">${slot('midi','Midi')}${slot('soir','Soir')}</div>
     </div>`;
   }).join('');
 
-  // liste des recettes (cliquables pour ouvrir la fiche)
+  // Cahier de recettes — cartes groupées par catégorie
   const rl=document.getElementById('recipes-list');
   if(rl){
-    rl.innerHTML=(data.recipes||[]).length
-      ? data.recipes.map(r=>`
-        <div class="settings-row">
-          <span style="flex:1;cursor:pointer;" onclick="openRecipe('${r.id}')">${r.veg?'🌱 ':''}${esc(r.name)}</span>
-          <button class="btn-icon" onclick="openRecipe('${r.id}')" title="Voir / modifier">✏️</button>
-          <button class="btn-icon" onclick="deleteRecipe('${r.id}')" title="Supprimer">🗑</button>
-        </div>`).join('')
-      : '<div style="font-size:12px;color:var(--text3);">Aucune recette. Ajoutez vos plats habituels ci-dessous.</div>';
+    const recs=data.recipes||[];
+    if(!recs.length){
+      rl.innerHTML='<div style="font-size:12px;color:var(--text3);">Aucune recette. Ajoutez vos plats ci-dessous.</div>';
+    } else {
+      let html='';
+      RECIPE_CATS.forEach(c=>{
+        const inCat=recs.filter(r=>(r.cat||'plats')===c.id);
+        if(!inCat.length) return;
+        html+=`<div class="rec-cat-title">${c.label}</div><div class="rec-grid">`;
+        html+=inCat.map(r=>`
+          <div class="rec-card" onclick="viewRecipeByName('${esc(r.name).replace(/'/g,"\\'")}')">
+            <div class="rec-icon">${r.icon||'🍽️'}</div>
+            <div class="rec-info">
+              <div class="rec-name">${r.veg?'🌱 ':''}${esc(r.name)}</div>
+              <div class="rec-meta">${r.time?'⏱ '+esc(r.time):''}${r.time&&r.author?' · ':''}${r.author?esc(r.author):''}</div>
+            </div>
+            <button class="btn-icon" onclick="event.stopPropagation();deleteRecipe('${r.id}')" title="Supprimer">🗑</button>
+          </div>`).join('');
+        html+=`</div>`;
+      });
+      rl.innerHTML=html;
+    }
   }
 }
 
@@ -2759,7 +2848,7 @@ function addBaseRecipes(){
   let added=0;
   recipeBank().forEach(b=>{
     if(!existing.has(b.name.toLowerCase())){
-      data.recipes.push({id:uid(),name:b.name,veg:b.veg,ingredients:b.ingredients,steps:b.steps});
+      data.recipes.push(normalizeRecipe(b));
       added++;
     }
   });
@@ -2773,7 +2862,7 @@ function addRecipe(){
   if(!v) return;
   if(!Array.isArray(data.recipes)) data.recipes=[];
   if(data.recipes.some(r=>r.name.toLowerCase()===v.toLowerCase())){ toast('Recette déjà dans la liste.'); inp.value=''; return; }
-  const r={id:uid(),name:v,veg:false,ingredients:'',steps:''};
+  const r=normalizeRecipe({name:v});
   data.recipes.push(r);
   inp.value='';
   saveData(); renderMeals();
@@ -2790,14 +2879,32 @@ function deleteRecipe(id){
 }
 
 // Fiche recette (modal)
+const RECIPE_ICONS=['🍽️','🍝','🍕','🥘','🍲','🥗','🍳','🥞','🧇','🍰','🎂','🍪','🥧','🍞','🥐','🫙','🍓','🥔','🍗','🐟','🍤','🌮','🍜','🥩','🧀','🥦','🍄','🍅'];
+
+function fillRecipeSelects(){
+  const ic=document.getElementById('recipe-icon');
+  if(ic) ic.innerHTML=RECIPE_ICONS.map(e=>`<option value="${e}">${e}</option>`).join('');
+  const cat=document.getElementById('recipe-cat');
+  if(cat) cat.innerHTML=RECIPE_CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  const au=document.getElementById('recipe-author');
+  if(au) au.innerHTML='<option value="">—</option>'+data.persons.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+}
+
 function openRecipe(id){
   const r=(data.recipes||[]).find(x=>x.id===id);
   if(!r) return;
+  fillRecipeSelects();
   document.getElementById('recipe-id').value=r.id;
   document.getElementById('recipe-name').value=r.name;
+  document.getElementById('recipe-icon').value=r.icon||'🍽️';
+  document.getElementById('recipe-cat').value=r.cat||'plats';
+  document.getElementById('recipe-author').value=r.author||'';
+  document.getElementById('recipe-time').value=r.time||'';
+  document.getElementById('recipe-portions').value=r.portions||'';
   document.getElementById('recipe-veg').checked=!!r.veg;
   document.getElementById('recipe-ingredients').value=r.ingredients||'';
   document.getElementById('recipe-steps').value=r.steps||'';
+  document.getElementById('recipe-note').value=r.note||'';
   openModal('modal-recipe');
 }
 
@@ -2808,11 +2915,36 @@ function saveRecipe(){
   const name=document.getElementById('recipe-name').value.trim();
   if(!name){ toast('Le nom est obligatoire.','error'); return; }
   r.name=name;
+  r.icon=document.getElementById('recipe-icon').value;
+  r.cat=document.getElementById('recipe-cat').value;
+  r.author=document.getElementById('recipe-author').value;
+  r.time=document.getElementById('recipe-time').value.trim();
+  r.portions=document.getElementById('recipe-portions').value.trim();
   r.veg=document.getElementById('recipe-veg').checked;
   r.ingredients=document.getElementById('recipe-ingredients').value.trim();
   r.steps=document.getElementById('recipe-steps').value.trim();
+  r.note=document.getElementById('recipe-note').value.trim();
   saveData(); renderMeals(); closeModal('modal-recipe');
   toast('Recette enregistrée ✓','success');
+}
+
+// Consultation d'une recette par son NOM (depuis le planning des repas)
+function viewRecipeByName(name){
+  const r=(data.recipes||[]).find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(!r){ toast('Pas de fiche pour ce plat'); return; }
+  const box=document.getElementById('recipe-view-body');
+  box.innerHTML=`
+    <div style="font-size:34px;text-align:center;margin-bottom:4px;">${r.icon||'🍽️'}</div>
+    <div style="font-family:'Instrument Serif',serif;font-size:1.5rem;text-align:center;margin-bottom:4px;">${esc(r.name)}</div>
+    <div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:14px;">
+      ${r.veg?'🌱 Végétarien · ':''}${catLabel(r.cat)}${r.time?' · ⏱ '+esc(r.time):''}${r.portions?' · 🍴 '+esc(r.portions):''}${r.author?' · 👩‍🍳 '+esc(r.author):''}
+    </div>
+    ${r.ingredients?`<div class="rv-sec"><div class="rv-h">Ingrédients</div><div class="rv-txt">${esc(r.ingredients).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${r.steps?`<div class="rv-sec"><div class="rv-h">Préparation</div><div class="rv-txt">${esc(r.steps).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${r.note?`<div class="rv-sec"><div class="rv-h">Note</div><div class="rv-txt" style="font-style:italic;">${esc(r.note).replace(/\n/g,'<br>')}</div></div>`:''}
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-recipe-view')">Fermer</button><button class="btn btn-primary" onclick="closeModal('modal-recipe-view');openRecipe('${r.id}')">Modifier</button></div>
+  `;
+  openModal('modal-recipe-view');
 }
 
 function clearMeals(){
