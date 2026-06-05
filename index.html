@@ -2410,12 +2410,11 @@ function renderToday(){
       inner+=`<div class="wk-pill" style="background:${p.color}22;color:${p.color};font-weight:600;">${icon} ${esc(p.name[0])}</div>`;
     });
     if(ferie) inner+=`<div class="wk-pill" style="background:#f0e0d8;color:#8a4030;">🎉</div>`;
-    inner+=evs.slice(0,2).map(e=>`<div class="wk-pill wk-rdv">${esc(e.time?e.time+' ':'')}${esc(e.text)}</div>`).join('');
+    inner+=evs.map(e=>`<div class="wk-pill wk-rdv">${esc(e.time?e.time+' ':'')}${esc(e.text)}</div>`).join('');
     inner+=dayTk.slice(0,2).map(t=>`<div class="wk-pill wk-task">📋 ${esc(t.title)}</div>`).join('');
-    const wkExtra=(evs.length>2?evs.length-2:0)+(dayTk.length>2?dayTk.length-2:0);
-    if(wkExtra>0) inner+=`<div style="font-size:9px;color:var(--text3);">+${wkExtra}</div>`;
+    if(dayTk.length>2) inner+=`<div style="font-size:9px;color:var(--text3);">+${dayTk.length-2} tâche${dayTk.length-2>1?'s':''}</div>`;
     if(!Object.keys(marks).length && !evs.length && !dayTk.length && !ferie) inner+=`<div class="wk-empty">—</div>`;
-    return `<div class="wk-col${isToday?' wk-today':''}" onclick="showSection('calendar', document.getElementById('nav-calendar')); openDay('${ds}')">${inner}</div>`;
+    return `<div class="wk-col${isToday?' wk-today':''}" onclick="openDay('${ds}')">${inner}</div>`;
   };
 
   let weekHTML=`<div class="today-block"><div class="today-head">🗓️ Ma semaine</div>`;
@@ -3103,14 +3102,14 @@ function addEvent(){
   data.events.push({id:uid(),date:ds,time,text});
   document.getElementById('day-ev-text').value='';
   document.getElementById('day-ev-time').value='';
-  saveData(); renderDayEvents(); renderCalendar();
+  saveData(); renderDayEvents(); calNeedsRefresh=true;
   toast('Rendez-vous ajouté ✓','success');
   document.getElementById('day-ev-text').focus();
 }
 
 function deleteEvent(id){
   data.events=(data.events||[]).filter(e=>e.id!==id);
-  saveData(); renderDayEvents(); renderCalendar();
+  saveData(); renderDayEvents(); calNeedsRefresh=true;
 }
 
 // ══════════════════════════════════════════════════════
