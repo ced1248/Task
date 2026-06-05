@@ -832,7 +832,10 @@ header{
 <header>
   <div class="header-row1">
     <div class="logo">🏠 <span>Maison</span></div>
-    <button class="btn-h" id="btn-settings" onclick="showSection('settings', document.getElementById('nav-settings'))" data-tip="Réglages" aria-label="Réglages">⚙️</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-h" onclick="window.open('potager_public.html','_blank')" data-tip="Potager" aria-label="Potager">🌱</button>
+      <button class="btn-h" id="btn-settings" onclick="showSection('settings', document.getElementById('nav-settings'))" data-tip="Réglages" aria-label="Réglages">⚙️</button>
+    </div>
   </div>
   <div class="header-row2">
     <div class="header-search">
@@ -842,7 +845,6 @@ header{
     <button class="btn-h" data-sec="projects" onclick="showSection('projects', document.getElementById('nav-projects'))">📁 Projets</button>
     <button class="btn-h" data-sec="achats" onclick="showSection('achats', document.getElementById('nav-achats'))">🛍️ Achats</button>
     <button class="btn-h" data-sec="meals" onclick="showSection('meals', document.getElementById('nav-meals'))">🍽️ Repas</button>
-    <button class="btn-h" onclick="window.open('potager_public.html','_blank')">🌱 Potager</button>
   </div>
 </header>
 
